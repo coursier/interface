@@ -15,7 +15,7 @@ import scala.collection.JavaConverters._
 
 object ApiHelper {
 
-  private final case class ApiRepo(repo: Repository) extends coursier.api.Repository
+  private[this] final case class ApiRepo(repo: Repository) extends coursier.api.Repository
 
   def defaultRepositories(): Array[coursier.api.Repository] =
     Resolve.defaultRepositories
@@ -34,13 +34,13 @@ object ApiHelper {
   def nopLogger(): Logger =
     WrappedLogger.of(CacheLogger.nop)
 
-  private def authenticationOpt(credentials: Credentials): Option[Authentication] =
+  private[this] def authenticationOpt(credentials: Credentials): Option[Authentication] =
     if (credentials == null)
       None
     else
       Some(Authentication(credentials.getUser, credentials.getPassword))
 
-  private def ivyRepository(ivy: coursier.api.IvyRepository): IvyRepository =
+  private[this] def ivyRepository(ivy: coursier.api.IvyRepository): IvyRepository =
     IvyRepository.parse(
       ivy.getPattern,
       Option(ivy.getMetadataPattern),

@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Module {
+public final class Module {
 
     private final String organization;
     private final String name;

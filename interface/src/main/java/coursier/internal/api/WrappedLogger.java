@@ -3,7 +3,7 @@ package coursier.internal.api;
 import coursier.api.Logger;
 import coursier.cache.CacheLogger;
 
-class WrappedLogger implements Logger {
+final class WrappedLogger implements Logger {
     private final CacheLogger logger;
     private WrappedLogger(CacheLogger logger) {
         this.logger = logger;

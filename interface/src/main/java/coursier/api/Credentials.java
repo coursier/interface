@@ -1,6 +1,6 @@
 package coursier.api;
 
-public class Credentials {
+public final class Credentials {
 
     private final String user;
     private final String password;

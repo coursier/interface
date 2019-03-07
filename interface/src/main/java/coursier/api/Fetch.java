@@ -5,7 +5,7 @@ import coursier.internal.api.ApiHelper;
 import java.io.File;
 import java.util.*;
 
-public class Fetch {
+public final class Fetch {
 
     private final List<Dependency> dependencies;
     private final List<Repository> repositories;

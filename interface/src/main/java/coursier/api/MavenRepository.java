@@ -1,6 +1,6 @@
 package coursier.api;
 
-public class MavenRepository implements Repository {
+public final class MavenRepository implements Repository {
 
     private final String base;
     private Credentials credentials;

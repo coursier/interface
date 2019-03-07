@@ -1,6 +1,6 @@
 package coursier.api;
 
-public class IvyRepository implements Repository {
+public final class IvyRepository implements Repository {
 
     private final String pattern;
     private String metadataPattern;

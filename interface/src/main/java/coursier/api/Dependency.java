@@ -1,6 +1,6 @@
 package coursier.api;
 
-public class Dependency {
+public final class Dependency {
 
     private final Module module;
     private final String version;
