@@ -80,11 +80,19 @@ object ApiHelper {
       .withLocation(fetch.getCache.getLocation)
       .withLogger(loggerOpt.getOrElse(CacheLogger.nop))
 
+    val classifiers = fetch
+      .getClassifiers
+      .asScala
+      .iterator
+      .toSet
+      .map(Classifier(_))
+
     Fetch()
       .withDependencies(dependencies)
       .withRepositories(repositories)
       .withCache(cache)
       .withMainArtifacts(fetch.getMainArtifacts)
+      .withClassifiers(classifiers)
   }
 
   def doFetch(fetch: coursier.api.Fetch): Array[File] =
