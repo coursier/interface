@@ -7,6 +7,7 @@ import coursier._
 import coursier.api.{Logger, SimpleLogger}
 import coursier.cache.loggers.RefreshLogger
 import coursier.cache.{CacheDefaults, CacheLogger, FileCache}
+import coursier.core.Authentication
 import coursier.util.Task
 
 import scala.collection.JavaConverters._
@@ -54,9 +55,12 @@ object ApiHelper {
       .map {
         case ApiRepo(repo) => repo
         case mvn: coursier.api.MavenRepository =>
-          MavenRepository(mvn.getBase)
-        case _ =>
-          ???
+          val authOpt = Option(mvn.getCredentials).map { cred =>
+            Authentication(cred.getUser, cred.getPassword)
+          }
+          MavenRepository(mvn.getBase, authentication = authOpt)
+        case other =>
+          throw new Exception(s"Unrecognized repository: " + other)
       }
 
     val loggerOpt = Option(fetch.getCache.getLogger).map[CacheLogger] {
