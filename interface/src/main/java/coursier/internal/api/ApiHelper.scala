@@ -4,10 +4,11 @@ import java.io.{File, OutputStreamWriter}
 import java.util.concurrent.ExecutorService
 
 import coursier._
-import coursier.api.{Logger, SimpleLogger}
+import coursier.api.{Credentials, Logger, SimpleLogger}
 import coursier.cache.loggers.RefreshLogger
 import coursier.cache.{CacheDefaults, CacheLogger, FileCache}
 import coursier.core.Authentication
+import coursier.ivy.IvyRepository
 import coursier.util.Task
 
 import scala.collection.JavaConverters._
@@ -33,6 +34,26 @@ object ApiHelper {
   def nopLogger(): Logger =
     WrappedLogger.of(CacheLogger.nop)
 
+  private def authenticationOpt(credentials: Credentials): Option[Authentication] =
+    if (credentials == null)
+      None
+    else
+      Some(Authentication(credentials.getUser, credentials.getPassword))
+
+  private def ivyRepository(ivy: coursier.api.IvyRepository): IvyRepository =
+    IvyRepository.parse(
+      ivy.getPattern,
+      Option(ivy.getMetadataPattern),
+      authentication = authenticationOpt(ivy.getCredentials)
+    ) match {
+      case Left(err) =>
+        throw new Exception(s"Invalid Ivy repository $ivy: $err")
+      case Right(repo) => repo
+    }
+
+  def validateIvyRepository(ivy: coursier.api.IvyRepository): Unit =
+    ivyRepository(ivy) // throws if anything's wrong
+
   def fetch(fetch: coursier.api.Fetch): Fetch[Task] = {
 
     val dependencies = fetch
@@ -55,10 +76,12 @@ object ApiHelper {
       .map {
         case ApiRepo(repo) => repo
         case mvn: coursier.api.MavenRepository =>
-          val authOpt = Option(mvn.getCredentials).map { cred =>
-            Authentication(cred.getUser, cred.getPassword)
-          }
-          MavenRepository(mvn.getBase, authentication = authOpt)
+          MavenRepository(
+            mvn.getBase,
+            authentication = authenticationOpt(mvn.getCredentials)
+          )
+        case ivy: coursier.api.IvyRepository =>
+          ivyRepository(ivy)
         case other =>
           throw new Exception(s"Unrecognized repository: " + other)
       }
