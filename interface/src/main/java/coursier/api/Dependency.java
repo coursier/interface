@@ -1,6 +1,8 @@
 package coursier.api;
 
-public final class Dependency {
+import java.io.Serializable;
+
+public final class Dependency implements Serializable {
 
     private final Module module;
     private final String version;

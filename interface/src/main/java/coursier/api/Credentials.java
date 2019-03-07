@@ -1,6 +1,8 @@
 package coursier.api;
 
-public final class Credentials {
+import java.io.Serializable;
+
+public final class Credentials implements Serializable {
 
     private final String user;
     private final String password;

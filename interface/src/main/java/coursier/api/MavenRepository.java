@@ -1,6 +1,8 @@
 package coursier.api;
 
-public final class MavenRepository implements Repository {
+import java.io.Serializable;
+
+public final class MavenRepository implements Repository, Serializable {
 
     private final String base;
     private Credentials credentials;

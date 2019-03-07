@@ -1,10 +1,11 @@
 package coursier.api;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-public final class Module {
+public final class Module implements Serializable {
 
     private final String organization;
     private final String name;

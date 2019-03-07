@@ -1,6 +1,8 @@
 package coursier.api;
 
-public final class IvyRepository implements Repository {
+import java.io.Serializable;
+
+public final class IvyRepository implements Repository, Serializable {
 
     private final String pattern;
     private String metadataPattern;
