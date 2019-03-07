@@ -1,0 +1,26 @@
+language: scala
+jdk: openjdk8
+git:
+  depth: false
+before_install:
+  - mkdir .bin
+  - curl -Lo .bin/sbt https://raw.githubusercontent.com/coursier/sbt-extras/77c93346a2b52cf35cc72382125cfdbb25a00197/sbt
+  - chmod +x .bin/sbt
+  - export PATH="$(pwd)/.bin:$PATH"
+cache:
+  directories:
+  - $HOME/.cache
+  - $HOME/.sbt
+branches:
+  only:
+  - master
+  - /^v\d+\.\d+.*$/ # tagged versions
+stages:
+  - name: test
+  - name: release
+    if: (branch = master AND type = push) OR (tag IS present)
+jobs:
+  include:
+  - script: sbt +test
+  - stage: release
+    script: sbt ci-release
