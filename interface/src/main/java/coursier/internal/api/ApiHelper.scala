@@ -93,10 +93,11 @@ object ApiHelper {
       .withCache(cache)
       .withMainArtifacts(fetch.getMainArtifacts)
       .withClassifiers(classifiers)
+      .withFetchCache(Option(fetch.getFetchCache))
   }
 
-  def doFetch(fetch: coursier.api.Fetch): Array[File] =
-    ApiHelper.fetch(fetch)
+  def doFetch(apiFetch: coursier.api.Fetch): Array[File] =
+    fetch(apiFetch)
       .run()
       .toArray
 

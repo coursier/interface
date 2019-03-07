@@ -12,6 +12,7 @@ public class Fetch {
     private Cache cache;
     private Boolean mainArtifacts;
     private final Set<String> classifiers;
+    private File fetchCache;
 
     private Fetch() {
         dependencies = new ArrayList<>();
@@ -19,6 +20,7 @@ public class Fetch {
         cache = Cache.create();
         mainArtifacts = null;
         classifiers = new HashSet<>();
+        fetchCache = null;
     }
 
 
@@ -71,6 +73,11 @@ public class Fetch {
         return this;
     }
 
+    public Fetch withFetchCache(File fetchCache) {
+        this.fetchCache = fetchCache;
+        return this;
+    }
+
     public List<Dependency> getDependencies() {
         return Collections.unmodifiableList(dependencies);
     }
@@ -89,6 +96,10 @@ public class Fetch {
 
     public Set<String> getClassifiers() {
         return Collections.unmodifiableSet(classifiers);
+    }
+
+    public File getFetchCache() {
+        return fetchCache;
     }
 
     public List<File> fetch() {
