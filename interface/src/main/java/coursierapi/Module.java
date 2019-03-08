@@ -1,4 +1,4 @@
-package coursier.api;
+package coursierapi;
 
 import java.io.Serializable;
 import java.util.Collections;
