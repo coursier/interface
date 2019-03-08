@@ -11,7 +11,7 @@ object Mima {
 
   def binaryCompatibilityVersions: Set[String] = {
 
-    val latest = Seq("git", "describe", "--tags", "--abbrev=0", "--match", "v*")
+    val latest = Seq("git", "describe", "--tags", "--abbrev=0", "--match", "v*", "HEAD^")
       .!!
       .trim
       .stripPrefix("v")
