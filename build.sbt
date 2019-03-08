@@ -16,6 +16,7 @@ inThisBuild(List(
 lazy val interface = project
   .enablePlugins(ShadingPlugin)
   .settings(
+    // shading stuff
     publish := publish.in(Shading).value,
     publishLocal := publishLocal.in(Shading).value,
     inConfig(_root_.coursier.ShadingPlugin.Shading)(com.typesafe.sbt.pgp.PgpSettings.projectSettings),
@@ -28,6 +29,7 @@ lazy val interface = project
       "io.github.soc.directories",
       "scala"
     ),
+
     autoScalaLibrary := false,
     scalaVersion := "2.12.8",
     scalacOptions += "-target:jvm-1.8",
@@ -35,7 +37,14 @@ lazy val interface = project
       "-source", "1.8",
       "-target", "1.8"
     ),
-    libraryDependencies += "io.get-coursier" %% "coursier" % "1.1.0-M13-1" % "shaded"
+    libraryDependencies += "io.get-coursier" %% "coursier" % "1.1.0-M13-1" % "shaded",
+
+    // mima
+    mimaPreviousArtifacts := {
+      Mima.binaryCompatibilityVersions.map { ver =>
+        organization.value %% moduleName.value % ver
+      }
+    }
   )
 
 lazy val `coursier-interface` = project
