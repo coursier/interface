@@ -1,6 +1,7 @@
 package coursierapi;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 public final class IvyRepository implements Repository, Serializable {
 
@@ -20,6 +21,10 @@ public final class IvyRepository implements Repository, Serializable {
         return new IvyRepository(pattern, metadataPattern);
     }
 
+    public static IvyRepository of(String pattern) {
+        return new IvyRepository(pattern, null);
+    }
+
 
     @Override
     public boolean equals(Object obj) {
@@ -28,8 +33,8 @@ public final class IvyRepository implements Repository, Serializable {
         if (obj instanceof IvyRepository) {
             IvyRepository other = (IvyRepository) obj;
             return this.pattern.equals(other.pattern) &&
-                    this.metadataPattern.equals(other.metadataPattern) &&
-                    this.credentials.equals(other.credentials);
+                    Objects.equals(this.metadataPattern, other.metadataPattern) &&
+                    Objects.equals(this.credentials, other.credentials);
         }
         return false;
     }

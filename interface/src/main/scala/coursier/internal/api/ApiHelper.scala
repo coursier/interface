@@ -7,9 +7,10 @@ import coursier._
 import coursierapi.{Credentials, Logger, SimpleLogger}
 import coursier.cache.loggers.RefreshLogger
 import coursier.cache.{CacheDefaults, CacheLogger, FileCache}
-import coursier.core.Authentication
+import coursier.core.{Authentication, Configuration}
 import coursier.error.{CoursierError, FetchError, ResolutionError}
 import coursier.ivy.IvyRepository
+import coursier.util.Parse.ModuleRequirements
 import coursier.util.Task
 
 import scala.collection.JavaConverters._
@@ -35,6 +36,38 @@ object ApiHelper {
   def nopLogger(): Logger =
     WrappedLogger.of(CacheLogger.nop)
 
+  private def apiModule(m: Module): coursierapi.Module =
+    coursierapi.Module.of(
+      m.organization.value,
+      m.name.value,
+      m.attributes.asJava
+    )
+
+  def parseModule(s: String, scalaVersion: String): coursierapi.Module =
+    coursier.util.Parse.module(s, scalaVersion) match {
+      case Left(err) =>
+        throw new IllegalArgumentException(err)
+      case Right(m) =>
+        apiModule(m)
+    }
+
+  def parseDependency(s: String, scalaVersion: String): coursierapi.Dependency =
+    coursier.util.Parse.moduleVersionConfig(
+      s,
+      ModuleRequirements(defaultConfiguration = Configuration.empty),
+      transitive = true,
+      scalaVersion
+    ) match {
+      case Left(err) =>
+        throw new IllegalArgumentException(err)
+      case Right((dep, params)) =>
+        // TODO Handle other Dependency fields, and params
+        coursierapi.Dependency.of(
+          apiModule(dep.module),
+          dep.version
+        )
+    }
+
   private[this] def authenticationOpt(credentials: Credentials): Option[Authentication] =
     if (credentials == null)
       None
@@ -44,7 +77,7 @@ object ApiHelper {
   private[this] def ivyRepository(ivy: coursierapi.IvyRepository): IvyRepository =
     IvyRepository.parse(
       ivy.getPattern,
-      Option(ivy.getMetadataPattern),
+      Option(ivy.getMetadataPattern).filter(_.nonEmpty),
       authentication = authenticationOpt(ivy.getCredentials)
     ) match {
       case Left(err) =>
@@ -112,7 +145,7 @@ object ApiHelper {
       .getClassifiers
       .asScala
       .iterator
-      .toSet
+      .toSet[String]
       .map(Classifier(_))
 
     Fetch()

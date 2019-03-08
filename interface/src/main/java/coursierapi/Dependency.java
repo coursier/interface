@@ -1,5 +1,7 @@
 package coursierapi;
 
+import coursier.internal.api.ApiHelper;
+
 import java.io.Serializable;
 
 public final class Dependency implements Serializable {
@@ -18,6 +20,10 @@ public final class Dependency implements Serializable {
     }
     public static Dependency of(String organization, String name, String version) {
         return new Dependency(Module.of(organization, name), version);
+    }
+
+    public static Dependency parse(String dep, ScalaVersion scalaVersion) {
+        return ApiHelper.parseDependency(dep, scalaVersion.getVersion());
     }
 
 

@@ -1,6 +1,7 @@
 package coursierapi;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 public final class MavenRepository implements Repository, Serializable {
 
@@ -25,7 +26,8 @@ public final class MavenRepository implements Repository, Serializable {
             return true;
         if (obj instanceof MavenRepository) {
             MavenRepository other = (MavenRepository) obj;
-            return this.base.equals(other.base) && this.credentials.equals(other.credentials);
+            return this.base.equals(other.base) &&
+                    Objects.equals(this.credentials, other.credentials);
         }
         return false;
     }

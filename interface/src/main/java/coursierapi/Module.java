@@ -1,5 +1,7 @@
 package coursierapi;
 
+import coursier.internal.api.ApiHelper;
+
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
@@ -24,6 +26,10 @@ public final class Module implements Serializable {
 
     public static Module of(String organization, String name, Map<String, String> attributes) {
         return new Module(organization, name, attributes);
+    }
+
+    public static Module parse(String mod, ScalaVersion scalaVersion) {
+        return ApiHelper.parseModule(mod, scalaVersion.getVersion());
     }
 
 
