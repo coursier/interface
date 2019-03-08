@@ -8,6 +8,7 @@ import coursierapi.{Credentials, Logger, SimpleLogger}
 import coursier.cache.loggers.RefreshLogger
 import coursier.cache.{CacheDefaults, CacheLogger, FileCache}
 import coursier.core.Authentication
+import coursier.error.{CoursierError, FetchError, ResolutionError}
 import coursier.ivy.IvyRepository
 import coursier.util.Task
 
@@ -123,9 +124,48 @@ object ApiHelper {
       .withFetchCache(Option(fetch.getFetchCache))
   }
 
-  def doFetch(apiFetch: coursierapi.Fetch): Array[File] =
-    fetch(apiFetch)
-      .run()
-      .toArray
+  private def simpleResError(err: ResolutionError.Simple): coursierapi.error.SimpleResolutionError =
+    err match {
+      // TODO Handle specific implementations of Simple
+      case s: ResolutionError.Simple =>
+        coursierapi.error.SimpleResolutionError.of(s.getMessage)
+    }
+
+  def doFetch(apiFetch: coursierapi.Fetch): Array[File] = {
+
+    val either = fetch(apiFetch).either()
+
+    // TODO Pass exception causes if any
+
+    either match {
+      case Left(err) =>
+
+        val ex = err match {
+          case d: FetchError.DownloadingArtifacts =>
+            coursierapi.error.DownloadingArtifactsError.of(
+              d.errors.map { case (a, e) => a.url -> e.describe }.toMap.asJava
+            )
+          case f: FetchError =>
+            coursierapi.error.FetchError.of(f.getMessage)
+
+          case s: ResolutionError.Several =>
+            coursierapi.error.MultipleResolutionError.of(
+              simpleResError(s.head),
+              s.tail.map(simpleResError): _*
+            )
+          case s: ResolutionError.Simple =>
+            simpleResError(s)
+          case r: ResolutionError =>
+            coursierapi.error.ResolutionError.of(r.getMessage)
+
+          case c: CoursierError =>
+            coursierapi.error.CoursierError.of(c.getMessage)
+        }
+
+        throw ex
+
+      case Right(res) => res.toArray
+    }
+  }
 
 }

@@ -1,6 +1,7 @@
 package coursierapi;
 
 import coursier.internal.api.ApiHelper;
+import coursierapi.error.CoursierError;
 
 import java.io.File;
 import java.util.*;
@@ -102,7 +103,7 @@ public final class Fetch {
         return fetchCache;
     }
 
-    public List<File> fetch() {
+    public List<File> fetch() throws CoursierError {
         File[] files = ApiHelper.doFetch(this);
         return Arrays.asList(files);
     }
