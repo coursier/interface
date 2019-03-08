@@ -16,6 +16,8 @@ inThisBuild(List(
 lazy val interface = project
   .enablePlugins(ShadingPlugin)
   .settings(
+    Settings.shared,
+    // shading stuff
     publish := publish.in(Shading).value,
     publishLocal := publishLocal.in(Shading).value,
     inConfig(_root_.coursier.ShadingPlugin.Shading)(com.typesafe.sbt.pgp.PgpSettings.projectSettings),
@@ -25,22 +27,29 @@ lazy val interface = project
     shadingNamespace := "coursierapi.shaded",
     shadeNamespaces ++= Set(
       "coursier",
-      "io.github.soc.directories"
+      "io.github.soc.directories",
+      "scala"
     ),
-    scalaVersion := "2.12.8",
-    scalacOptions += "-target:jvm-1.8",
-    javacOptions ++= Seq(
-      "-source", "1.8",
-      "-target", "1.8"
-    ),
+
+    autoScalaLibrary := false,
     libraryDependencies += "io.get-coursier" %% "coursier" % "1.1.0-M13-1" % "shaded",
+
+  )
+
+lazy val interpolators = project
+  .dependsOn(interface)
+  .settings(
+    Settings.shared,
     libraryDependencies ++= Seq(
-      // explicitly depending on those so that they aren't shaded
-      "org.scala-lang" % "scala-library" % scalaVersion.value,
-      "org.scala-lang.modules" %% "scala-xml" % "1.1.1"
+      "org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided,
+      "com.lihaoyi" %% "utest" % "0.6.6" % Test
     ),
+    testFrameworks += new TestFramework("utest.runner.Framework"),
   )
 
 lazy val `coursier-interface` = project
   .in(file("."))
-  .aggregate(interface)
+  .aggregate(interface, interpolators)
+  .settings(
+    publishArtifact := false
+  )

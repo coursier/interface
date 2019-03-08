@@ -21,6 +21,6 @@ stages:
     if: (branch = master AND type = push) OR (tag IS present)
 jobs:
   include:
-  - script: sbt +test
+  - script: sbt +test +mimaReportBinaryIssues +publishLocal
   - stage: release
     script: sbt ci-release
