@@ -5,7 +5,7 @@ import coursier.internal.api.ApiHelper;
 import java.io.File;
 import java.util.concurrent.ExecutorService;
 
-public class Cache {
+public final class Cache {
 
     private ExecutorService pool;
     private File location;

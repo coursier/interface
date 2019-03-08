@@ -3,23 +3,24 @@ package coursier.api;
 import coursier.internal.api.ApiHelper;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
-public class Fetch {
+public final class Fetch {
 
     private final List<Dependency> dependencies;
     private final List<Repository> repositories;
     private Cache cache;
     private Boolean mainArtifacts;
+    private final Set<String> classifiers;
+    private File fetchCache;
 
     private Fetch() {
         dependencies = new ArrayList<>();
         repositories = new ArrayList<>(Arrays.asList(ApiHelper.defaultRepositories()));
         cache = Cache.create();
         mainArtifacts = null;
+        classifiers = new HashSet<>();
+        fetchCache = null;
     }
 
 
@@ -62,6 +63,21 @@ public class Fetch {
         return this;
     }
 
+    public Fetch withClassifiers(Set<String> classifiers) {
+        this.classifiers.clear();
+        this.classifiers.addAll(classifiers);
+        return this;
+    }
+    public Fetch addClassifiers(String... classifiers) {
+        this.classifiers.addAll(Arrays.asList(classifiers));
+        return this;
+    }
+
+    public Fetch withFetchCache(File fetchCache) {
+        this.fetchCache = fetchCache;
+        return this;
+    }
+
     public List<Dependency> getDependencies() {
         return Collections.unmodifiableList(dependencies);
     }
@@ -76,6 +92,14 @@ public class Fetch {
 
     public Boolean getMainArtifacts() {
         return mainArtifacts;
+    }
+
+    public Set<String> getClassifiers() {
+        return Collections.unmodifiableSet(classifiers);
+    }
+
+    public File getFetchCache() {
+        return fetchCache;
     }
 
     public List<File> fetch() {
