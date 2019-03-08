@@ -1,4 +1,4 @@
-package coursier.api;
+package coursierapi;
 
 import coursier.internal.api.ApiHelper;
 

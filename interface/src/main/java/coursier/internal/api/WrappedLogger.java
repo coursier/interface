@@ -1,6 +1,6 @@
 package coursier.internal.api;
 
-import coursier.api.Logger;
+import coursierapi.Logger;
 import coursier.cache.CacheLogger;
 
 final class WrappedLogger implements Logger {

@@ -4,7 +4,7 @@ import java.io.{File, OutputStreamWriter}
 import java.util.concurrent.ExecutorService
 
 import coursier._
-import coursier.api.{Credentials, Logger, SimpleLogger}
+import coursierapi.{Credentials, Logger, SimpleLogger}
 import coursier.cache.loggers.RefreshLogger
 import coursier.cache.{CacheDefaults, CacheLogger, FileCache}
 import coursier.core.Authentication
@@ -15,9 +15,9 @@ import scala.collection.JavaConverters._
 
 object ApiHelper {
 
-  private[this] final case class ApiRepo(repo: Repository) extends coursier.api.Repository
+  private[this] final case class ApiRepo(repo: Repository) extends coursierapi.Repository
 
-  def defaultRepositories(): Array[coursier.api.Repository] =
+  def defaultRepositories(): Array[coursierapi.Repository] =
     Resolve.defaultRepositories
       .map { repo =>
         ApiRepo(repo)
@@ -40,7 +40,7 @@ object ApiHelper {
     else
       Some(Authentication(credentials.getUser, credentials.getPassword))
 
-  private[this] def ivyRepository(ivy: coursier.api.IvyRepository): IvyRepository =
+  private[this] def ivyRepository(ivy: coursierapi.IvyRepository): IvyRepository =
     IvyRepository.parse(
       ivy.getPattern,
       Option(ivy.getMetadataPattern),
@@ -51,10 +51,10 @@ object ApiHelper {
       case Right(repo) => repo
     }
 
-  def validateIvyRepository(ivy: coursier.api.IvyRepository): Unit =
+  def validateIvyRepository(ivy: coursierapi.IvyRepository): Unit =
     ivyRepository(ivy) // throws if anything's wrong
 
-  def fetch(fetch: coursier.api.Fetch): Fetch[Task] = {
+  def fetch(fetch: coursierapi.Fetch): Fetch[Task] = {
 
     val dependencies = fetch
       .getDependencies
@@ -75,12 +75,12 @@ object ApiHelper {
       .asScala
       .map {
         case ApiRepo(repo) => repo
-        case mvn: coursier.api.MavenRepository =>
+        case mvn: coursierapi.MavenRepository =>
           MavenRepository(
             mvn.getBase,
             authentication = authenticationOpt(mvn.getCredentials)
           )
-        case ivy: coursier.api.IvyRepository =>
+        case ivy: coursierapi.IvyRepository =>
           ivyRepository(ivy)
         case other =>
           throw new Exception(s"Unrecognized repository: " + other)
@@ -123,7 +123,7 @@ object ApiHelper {
       .withFetchCache(Option(fetch.getFetchCache))
   }
 
-  def doFetch(apiFetch: coursier.api.Fetch): Array[File] =
+  def doFetch(apiFetch: coursierapi.Fetch): Array[File] =
     fetch(apiFetch)
       .run()
       .toArray

@@ -1,4 +1,4 @@
-package coursier.api;
+package coursierapi;
 
 public interface Repository {
 }
