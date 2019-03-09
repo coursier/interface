@@ -6,101 +6,55 @@ import scala.reflect.macros.blackbox
 
 object Interpolators {
 
-  object Macros {
+  final class Macros(val c: blackbox.Context) {
+    import c.universe._
 
-    private def is211: Boolean =
-      scala.util.Properties.versionNumberString.startsWith("2.11.")
-
-    def safeModule(c: blackbox.Context)(args: c.Expr[Any]*): c.Expr[Module] = {
-      import c.universe._
+    private def unsafeGetPrefixString: String = {
       c.prefix.tree match {
-        case Apply(_, List(Apply(_, Literal(Constant(modString: String)) :: Nil))) =>
-          val mod = coursierapi.Module.parse(modString, coursierapi.ScalaVersion.of(scala.util.Properties.versionNumberString))
-              val attrs = mod.getAttributes.asScala.toSeq.map {
-                case (k, v) =>
-                  q"_root_.scala.Tuple2($k, $v)"
-              }
-          if (is211)
-            c.Expr(q"""
-              _root_.coursierapi.Module.of(
-                ${mod.getOrganization},
-                ${mod.getName},
-                _root_.scala.collection.JavaConversions.mapAsJavaMap(_root_.scala.collection.immutable.Map(..$attrs))
-              )
-            """)
-          else
-            c.Expr(q"""
-              _root_.coursierapi.Module.of(
-                ${mod.getOrganization},
-                ${mod.getName},
-                _root_.scala.collection.JavaConverters.mapAsJavaMap(_root_.scala.collection.immutable.Map(..$attrs))
-              )
-            """)
-        case _ =>
-          c.abort(c.enclosingPosition, s"Only a single String literal is allowed here")
+        case Apply(_, List(Apply(_, Literal(Constant(string: String)) :: Nil))) => string
+        case _  => c.abort(c.enclosingPosition, "Only a single String literal is allowed here")
       }
     }
 
-    def safeDependency(c: blackbox.Context)(args: c.Expr[Any]*): c.Expr[Dependency] = {
-      import c.universe._
-      c.prefix.tree match {
-        case Apply(_, List(Apply(_, Literal(Constant(modString: String)) :: Nil))) =>
-          val dep = coursierapi.Dependency.parse(modString, ScalaVersion.of(scala.util.Properties.versionNumberString))
-          val attrs = dep.getModule.getAttributes.asScala.toSeq.map {
-            case (k, v) =>
-              q"_root_.scala.Tuple2($k, $v)"
-          }
-          if (is211)
-            c.Expr(q"""
-              _root_.coursierapi.Dependency.of(
-                _root_.coursierapi.Module.of(
-                  ${dep.getModule.getOrganization},
-                  ${dep.getModule.getName},
-                  _root_.scala.collection.JavaConversions.mapAsJavaMap(_root_.scala.collection.immutable.Map(..$attrs))
-                ),
-                ${dep.getVersion}
-              )
-            """)
-          else
-            c.Expr(q"""
-              _root_.coursierapi.Dependency.of(
-                _root_.coursierapi.Module.of(
-                  ${dep.getModule.getOrganization},
-                  ${dep.getModule.getName},
-                  _root_.scala.collection.JavaConverters.mapAsJavaMap(_root_.scala.collection.immutable.Map(..$attrs))
-                ),
-                ${dep.getVersion}
-              )
-            """)
-        case _ =>
-          c.abort(c.enclosingPosition, s"Only a single String literal is allowed here")
-      }
+    private def scalaVersion = ScalaVersion.of(scala.util.Properties.versionNumberString)
+
+    private def toModuleExpr(mod: Module): Expr[Module] = {
+      val attrs = mod.getAttributes.asScala.toSeq.map { case (k, v) => q"_root_.scala.Tuple2($k, $v)" }
+      c.Expr(q"""
+        _root_.coursierapi.Module.of(
+          ${mod.getOrganization},
+          ${mod.getName},
+          _root_.scala.collection.JavaConverters.mapAsJavaMapConverter(_root_.scala.collection.immutable.Map(..$attrs)).asJava
+        )
+      """)
     }
 
-    def safeMavenRepository(c: blackbox.Context)(args: c.Expr[Any]*): c.Expr[MavenRepository] = {
-      import c.universe._
-      c.prefix.tree match {
-        case Apply(_, List(Apply(_, Literal(Constant(root: String)) :: Nil))) =>
-          // FIXME Check that there's no query string, fragment, … in uri?
-          val uri = new java.net.URI(root)
-          c.Expr(q"""_root_.coursierapi.MavenRepository.of($root)""")
-        case _ =>
-          c.abort(c.enclosingPosition, s"Only a single String literal is allowed here")
-      }
+    def safeModule(args: Expr[Any]*): Expr[Module] = {
+      val modString = unsafeGetPrefixString
+      val mod = Module.parse(modString, scalaVersion)
+      toModuleExpr(mod)
     }
 
-    def safeIvyRepository(c: blackbox.Context)(args: c.Expr[Any]*): c.Expr[IvyRepository] = {
-      import c.universe._
-      c.prefix.tree match {
-        case Apply(_, List(Apply(_, Literal(Constant(str: String)) :: Nil))) =>
-          // FIXME Check that there's no query string, fragment, … in uri?
-          val r = coursierapi.IvyRepository.of(str)
-          // Here, ideally, we should lift r as an Expr, but this is quite cumbersome to do (it involves lifting
-          // Seq[coursier.ivy.Pattern.Chunk], where coursier.ivy.Pattern.Chunk is an ADT, …
-          c.Expr(q"""_root_.coursierapi.IvyRepository.of($str)""")
-        case _ =>
-          c.abort(c.enclosingPosition, s"Only a single String literal is allowed here")
-      }
+    def safeDependency(args: Expr[Any]*): Expr[Dependency] = {
+      val depString = unsafeGetPrefixString
+      val dep = Dependency.parse(depString, scalaVersion)
+      c.Expr(q"_root_.coursierapi.Dependency.of(${toModuleExpr(dep.getModule)}, ${dep.getVersion})")
+    }
+
+    def safeMavenRepository(args: Expr[Any]*): Expr[MavenRepository] = {
+      val root = unsafeGetPrefixString
+      // FIXME Check that there's no query string, fragment, … in uri?
+      val uri = new java.net.URI(root)
+      c.Expr(q"""_root_.coursierapi.MavenRepository.of($root)""")
+    }
+
+    def safeIvyRepository(args: Expr[Any]*): Expr[IvyRepository] = {
+      val str = unsafeGetPrefixString
+      // FIXME Check that there's no query string, fragment, … in uri?
+      val r = IvyRepository.of(str)
+      // Here, ideally, we should lift r as an Expr, but this is quite cumbersome to do (it involves lifting
+      // Seq[coursier.ivy.Pattern.Chunk], where coursier.ivy.Pattern.Chunk is an ADT, …
+      c.Expr(q"""_root_.coursierapi.IvyRepository.of($str)""")
     }
   }
 
