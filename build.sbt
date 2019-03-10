@@ -1,3 +1,4 @@
+import com.typesafe.tools.mima.core.{MissingClassProblem, Problem, ProblemFilters}
 
 inThisBuild(List(
   organization := "io.get-coursier",
@@ -13,6 +14,8 @@ inThisBuild(List(
   )
 ))
 
+val shadingNamespace0 = "coursierapi.shaded"
+
 lazy val interface = project
   .enablePlugins(ShadingPlugin)
   .settings(
@@ -24,7 +27,7 @@ lazy val interface = project
     ShadingPlugin.projectSettings, // seems this has to be repeated, *after* the addition of PgpSettings…
     PgpKeys.publishSigned := PgpKeys.publishSigned.in(Shading).value,
     PgpKeys.publishLocalSigned := PgpKeys.publishLocalSigned.in(Shading).value,
-    shadingNamespace := "coursierapi.shaded",
+    shadingNamespace := shadingNamespace0,
     shadeNamespaces ++= Set(
       "coursier",
       "io.github.soc.directories",
@@ -33,6 +36,11 @@ lazy val interface = project
 
     autoScalaLibrary := false,
     libraryDependencies += "io.get-coursier" %% "coursier" % "1.1.0-M13-1" % "shaded",
+
+    mimaBinaryIssueFilters ++= Seq(
+      // users shouln't ever reference this
+      ProblemFilters.exclude[Problem](s"$shadingNamespace0.*"),
+    )
 
   )
 
@@ -45,6 +53,11 @@ lazy val interpolators = project
       "com.lihaoyi" %% "utest" % "0.6.6" % Test
     ),
     testFrameworks += new TestFramework("utest.runner.Framework"),
+
+    mimaBinaryIssueFilters ++= Seq(
+      // only used at compile time, not runtime
+      ProblemFilters.exclude[MissingClassProblem]("coursierapi.Interpolators$Macros$"),
+    )
   )
 
 lazy val `coursier-interface` = project
