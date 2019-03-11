@@ -91,6 +91,10 @@ lazy val interface = project
 
     Settings.shared,
     libraryDependencies += "io.get-coursier" %% "coursier" % "1.1.0-M13-1",
+
+    libraryDependencies += "com.lihaoyi" %% "utest" % "0.6.6" % Test,
+    testFrameworks += new TestFramework("utest.runner.Framework"),
+
     mimaBinaryIssueFilters ++= Seq(
       // users shouln't ever reference those
       ProblemFilters.exclude[Problem]("coursierapi.shaded.*"),
