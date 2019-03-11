@@ -9,29 +9,14 @@ object Mima {
       .replace("-RC", "-")
       .forall(c => c == '.' || c == '-' || c.isDigit)
 
-  def binaryCompatibilityVersions: Set[String] = {
-
-    val latest = Seq("git", "describe", "--tags", "--abbrev=0", "--match", "v*", "HEAD^")
+  def binaryCompatibilityVersions: Set[String] =
+    Seq("git", "tag", "--merged", "HEAD^")
       .!!
-      .trim
-      .stripPrefix("v")
+      .linesIterator
+      .map(_.trim)
+      .filter(_.startsWith("v"))
+      .map(_.stripPrefix("v"))
+      .filter(stable)
+      .toSet
 
-    assert(latest.nonEmpty, "Could not find latest version")
-
-    if (stable(latest)) {
-      val prefix = latest.split('.').take(2).map(_ + ".").mkString
-
-      val previous = Seq("git", "tag", "--list", "v" + prefix + "*")
-        .!!
-        .linesIterator
-        .map(_.trim.stripPrefix("v"))
-        .filter(stable)
-        .toSet
-
-      assert(previous.contains(latest), "Something went wrong")
-
-      previous
-    } else
-      Set()
-  }
 }
