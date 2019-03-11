@@ -46,7 +46,8 @@ lazy val interface = project
         log.info(s"Generating $dest")
         transformer.transform(cp)
 
-        // TODO Check that there are no other namespaces than coursierapi at the root of dest
+        Check.onlyNamespace("coursierapi", dest)
+
         dest.setLastModified(origLastModified)
       }
       dest
