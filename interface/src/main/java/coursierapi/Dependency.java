@@ -3,16 +3,19 @@ package coursierapi;
 import coursier.internal.api.ApiHelper;
 
 import java.io.Serializable;
+import java.util.*;
 
 public final class Dependency implements Serializable {
 
     private final Module module;
     private final String version;
+    private final Set<Map.Entry<String, String>> exclusions;
 
 
     private Dependency(Module module, String version) {
         this.module = module;
         this.version = version;
+        this.exclusions = new HashSet<>();
     }
 
     public static Dependency of(Module module, String version) {
@@ -24,6 +27,18 @@ public final class Dependency implements Serializable {
 
     public static Dependency parse(String dep, ScalaVersion scalaVersion) {
         return ApiHelper.parseDependency(dep, scalaVersion.getVersion());
+    }
+
+
+    public Dependency addExclusion(String organization, String name) {
+        this.exclusions.add(new AbstractMap.SimpleImmutableEntry<>(organization, name));
+        return this;
+    }
+
+    public Dependency withExclusion(Set<Map.Entry<String, String>> exclusions) {
+        this.exclusions.clear();
+        this.exclusions.addAll(exclusions);
+        return this;
     }
 
 
@@ -55,5 +70,9 @@ public final class Dependency implements Serializable {
 
     public String getVersion() {
         return version;
+    }
+
+    public Set<Map.Entry<String, String>> getExclusions() {
+        return Collections.unmodifiableSet(exclusions);
     }
 }

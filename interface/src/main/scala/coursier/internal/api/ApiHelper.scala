@@ -1,6 +1,7 @@
 package coursier.internal.api
 
 import java.io.{File, OutputStreamWriter}
+import java.{util => ju}
 import java.util.concurrent.ExecutorService
 
 import coursier._
@@ -62,10 +63,7 @@ object ApiHelper {
         throw new IllegalArgumentException(err)
       case Right((dep, params)) =>
         // TODO Handle other Dependency fields, and params
-        coursierapi.Dependency.of(
-          apiModule(dep.module),
-          dep.version
-        )
+        dependency(dep)
     }
 
   private[this] def authenticationOpt(credentials: Credentials): Option[Authentication] =
@@ -88,21 +86,38 @@ object ApiHelper {
   def validateIvyRepository(ivy: coursierapi.IvyRepository): Unit =
     ivyRepository(ivy) // throws if anything's wrong
 
+  def dependency(dep: coursierapi.Dependency): Dependency =
+    Dependency(
+      Module(
+        Organization(dep.getModule.getOrganization),
+        ModuleName(dep.getModule.getName),
+        dep.getModule.getAttributes.asScala.iterator.toMap
+      ),
+      dep.getVersion
+    )
+
+  def dependency(dep: Dependency): coursierapi.Dependency =
+    coursierapi.Dependency
+      .of(
+        apiModule(dep.module),
+        dep.version
+      )
+      .withExclusion(
+        dep
+          .exclusions
+          .map {
+            case (o, n) =>
+              new ju.AbstractMap.SimpleImmutableEntry(o.value, n.value): ju.Map.Entry[String, String]
+          }
+          .asJava
+      )
+
   def fetch(fetch: coursierapi.Fetch): Fetch[Task] = {
 
     val dependencies = fetch
       .getDependencies
       .asScala
-      .map { jDep =>
-        Dependency(
-          Module(
-            Organization(jDep.getModule.getOrganization),
-            ModuleName(jDep.getModule.getName),
-            jDep.getModule.getAttributes.asScala.iterator.toMap
-          ),
-          jDep.getVersion
-        )
-      }
+      .map(dependency)
 
     val repositories = fetch
       .getRepositories
