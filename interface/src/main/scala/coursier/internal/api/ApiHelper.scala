@@ -86,15 +86,31 @@ object ApiHelper {
   def validateIvyRepository(ivy: coursierapi.IvyRepository): Unit =
     ivyRepository(ivy) // throws if anything's wrong
 
-  def dependency(dep: coursierapi.Dependency): Dependency =
-    Dependency(
-      Module(
-        Organization(dep.getModule.getOrganization),
-        ModuleName(dep.getModule.getName),
-        dep.getModule.getAttributes.asScala.iterator.toMap
-      ),
-      dep.getVersion
+  def dependency(dep: coursierapi.Dependency): Dependency = {
+
+    val module = Module(
+      Organization(dep.getModule.getOrganization),
+      ModuleName(dep.getModule.getName),
+      dep.getModule.getAttributes.asScala.iterator.toMap
     )
+    val exclusions = dep
+      .getExclusions
+      .iterator()
+      .asScala
+      .map(e => (Organization(e.getKey), ModuleName(e.getValue)))
+      .toSet
+    val configuration = Configuration(dep.getConfiguration)
+    val tpe = Type(dep.getType)
+    val classifier = Classifier(dep.getClassifier)
+
+    Dependency(
+      module, dep.getVersion,
+      exclusions = exclusions,
+      configuration = configuration,
+      attributes = Attributes(tpe, classifier),
+      transitive = dep.isTransitive
+    )
+  }
 
   def dependency(dep: Dependency): coursierapi.Dependency =
     coursierapi.Dependency
@@ -102,6 +118,9 @@ object ApiHelper {
         apiModule(dep.module),
         dep.version
       )
+      .withConfiguration(dep.configuration.value)
+      .withType(dep.attributes.`type`.value)
+      .withClassifier(dep.attributes.classifier.value)
       .withExclusion(
         dep
           .exclusions
@@ -111,6 +130,7 @@ object ApiHelper {
           }
           .asJava
       )
+      .withTransitive(dep.transitive)
 
   def fetch(fetch: coursierapi.Fetch): Fetch[Task] = {
 
