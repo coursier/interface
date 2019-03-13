@@ -41,7 +41,7 @@ public final class IvyRepository implements Repository, Serializable {
 
     @Override
     public int hashCode() {
-        return 37 * (37 * (17 + pattern.hashCode()) + metadataPattern.hashCode()) + credentials.hashCode();
+        return 37 * (37 * (17 + pattern.hashCode()) + Objects.hashCode(metadataPattern)) + Objects.hashCode(credentials);
     }
 
     @Override
