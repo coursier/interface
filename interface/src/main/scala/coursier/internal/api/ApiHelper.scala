@@ -11,6 +11,7 @@ import coursier.cache.{CacheDefaults, CacheLogger, FileCache}
 import coursier.core.{Authentication, Configuration}
 import coursier.error.{CoursierError, FetchError, ResolutionError}
 import coursier.ivy.IvyRepository
+import coursier.params.ResolutionParams
 import coursier.util.Parse.ModuleRequirements
 import coursier.util.Task
 
@@ -37,19 +38,12 @@ object ApiHelper {
   def nopLogger(): Logger =
     WrappedLogger.of(CacheLogger.nop)
 
-  private def apiModule(m: Module): coursierapi.Module =
-    coursierapi.Module.of(
-      m.organization.value,
-      m.name.value,
-      m.attributes.asJava
-    )
-
   def parseModule(s: String, scalaVersion: String): coursierapi.Module =
     coursier.util.Parse.module(s, scalaVersion) match {
       case Left(err) =>
         throw new IllegalArgumentException(err)
       case Right(m) =>
-        apiModule(m)
+        module(m)
     }
 
   def parseDependency(s: String, scalaVersion: String): coursierapi.Dependency =
@@ -86,13 +80,23 @@ object ApiHelper {
   def validateIvyRepository(ivy: coursierapi.IvyRepository): Unit =
     ivyRepository(ivy) // throws if anything's wrong
 
+  def module(mod: coursierapi.Module): Module =
+    Module(
+      Organization(mod.getOrganization),
+      ModuleName(mod.getName),
+      mod.getAttributes.asScala.iterator.toMap
+    )
+
+  def module(mod: Module): coursierapi.Module =
+    coursierapi.Module.of(
+      mod.organization.value,
+      mod.name.value,
+      mod.attributes.asJava
+    )
+
   def dependency(dep: coursierapi.Dependency): Dependency = {
 
-    val module = Module(
-      Organization(dep.getModule.getOrganization),
-      ModuleName(dep.getModule.getName),
-      dep.getModule.getAttributes.asScala.iterator.toMap
-    )
+    val module0 = module(dep.getModule)
     val exclusions = dep
       .getExclusions
       .iterator()
@@ -104,7 +108,7 @@ object ApiHelper {
     val classifier = Classifier(dep.getClassifier)
 
     Dependency(
-      module, dep.getVersion,
+      module0, dep.getVersion,
       exclusions = exclusions,
       configuration = configuration,
       attributes = Attributes(tpe, classifier),
@@ -115,7 +119,7 @@ object ApiHelper {
   def dependency(dep: Dependency): coursierapi.Dependency =
     coursierapi.Dependency
       .of(
-        apiModule(dep.module),
+        module(dep.module),
         dep.version
       )
       .withConfiguration(dep.configuration.value)
@@ -132,6 +136,58 @@ object ApiHelper {
       )
       .withTransitive(dep.transitive)
 
+  def repository(repo: coursierapi.Repository): Repository =
+    repo match {
+      case ApiRepo(repo0) => repo0
+      case mvn: coursierapi.MavenRepository =>
+        MavenRepository(
+          mvn.getBase,
+          authentication = authenticationOpt(mvn.getCredentials)
+        )
+      case ivy: coursierapi.IvyRepository =>
+        ivyRepository(ivy)
+      case other =>
+        throw new Exception(s"Unrecognized repository: " + other)
+    }
+
+  def credentials(auth: Authentication): Credentials =
+    coursierapi.Credentials.of(auth.user, auth.password)
+
+  def repository(repo: Repository): coursierapi.Repository =
+    repo match {
+      case mvn: MavenRepository =>
+        val credentialsOpt = mvn.authentication.map(credentials)
+        coursierapi.MavenRepository.of(mvn.root)
+          .withCredentials(credentialsOpt.orNull)
+      case ivy: IvyRepository =>
+        val credentialsOpt = ivy.authentication.map(credentials)
+        val mdPatternOpt = ivy.metadataPatternOpt.map(_.string)
+        coursierapi.IvyRepository.of(ivy.pattern.string)
+          .withMetadataPattern(mdPatternOpt.orNull)
+          .withCredentials(credentialsOpt.orNull)
+      case other =>
+        throw new Exception(s"Unrecognized repository: " + other)
+    }
+
+  def resolutionParams(params: ResolutionParams): coursierapi.ResolutionParams = {
+    val default = ResolutionParams()
+    var params0 = coursierapi.ResolutionParams.create()
+    if (params.maxIterations != default.maxIterations)
+      params0 = params0.withMaxIterations(params.maxIterations)
+    params0
+      .withForceVersions(params.forceVersion.map { case (m, v) => module(m) -> v }.asJava)
+      .withForceProperties(params.forcedProperties.asJava)
+  }
+
+  def resolutionParams(params: coursierapi.ResolutionParams): ResolutionParams = {
+    var params0 = ResolutionParams()
+    if (params.getMaxIterations != null)
+      params0 = params0.withMaxIterations(params.getMaxIterations)
+    params0
+      .withForceVersion(params.getForceVersions.asScala.iterator.toMap.map { case (m, v) => module(m) -> v })
+      .withForcedProperties(params.getForcedProperties.asScala.iterator.toMap)
+  }
+
   def fetch(fetch: coursierapi.Fetch): Fetch[Task] = {
 
     val dependencies = fetch
@@ -142,18 +198,7 @@ object ApiHelper {
     val repositories = fetch
       .getRepositories
       .asScala
-      .map {
-        case ApiRepo(repo) => repo
-        case mvn: coursierapi.MavenRepository =>
-          MavenRepository(
-            mvn.getBase,
-            authentication = authenticationOpt(mvn.getCredentials)
-          )
-        case ivy: coursierapi.IvyRepository =>
-          ivyRepository(ivy)
-        case other =>
-          throw new Exception(s"Unrecognized repository: " + other)
-      }
+      .map(repository)
 
     val loggerOpt = Option(fetch.getCache.getLogger).map[CacheLogger] {
       case s: SimpleLogger =>
@@ -183,13 +228,19 @@ object ApiHelper {
       .toSet[String]
       .map(Classifier(_))
 
-    Fetch()
+    val params = resolutionParams(fetch.getResolutionParams)
+
+    var f = Fetch()
       .withDependencies(dependencies)
       .withRepositories(repositories)
       .withCache(cache)
       .withMainArtifacts(fetch.getMainArtifacts)
       .withClassifiers(classifiers)
       .withFetchCache(Option(fetch.getFetchCache))
+      .withResolutionParams(params)
+    if (fetch.getArtifactTypes != null)
+      f = f.withArtifactTypes(fetch.getArtifactTypes.asScala.toSet[String].map(Type(_)))
+    f
   }
 
   private def simpleResError(err: ResolutionError.Simple): coursierapi.error.SimpleResolutionError =

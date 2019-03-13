@@ -13,7 +13,9 @@ public final class Fetch {
     private Cache cache;
     private Boolean mainArtifacts;
     private final Set<String> classifiers;
+    private Set<String> artifactTypes;
     private File fetchCache;
+    private ResolutionParams resolutionParams;
 
     private Fetch() {
         dependencies = new ArrayList<>();
@@ -21,9 +23,77 @@ public final class Fetch {
         cache = Cache.create();
         mainArtifacts = null;
         classifiers = new HashSet<>();
+        artifactTypes = null;
         fetchCache = null;
+        resolutionParams = ResolutionParams.create();
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Fetch) {
+            Fetch other = (Fetch) obj;
+            return this.dependencies.equals(other.dependencies) &&
+                    this.repositories.equals(other.repositories) &&
+                    this.cache.equals(other.cache) &&
+                    Objects.equals(this.mainArtifacts, other.mainArtifacts) &&
+                    this.classifiers.equals(other.classifiers) &&
+                    Objects.equals(this.artifactTypes, other.artifactTypes) &&
+                    Objects.equals(this.fetchCache, other.fetchCache) &&
+                    this.resolutionParams.equals(other.resolutionParams);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return 37 * (37 * (37 * (37 * (37 * (37 * (37 * (17 + dependencies.hashCode()) + repositories.hashCode()) + cache.hashCode()) + Objects.hashCode(mainArtifacts)) + classifiers.hashCode()) + Objects.hashCode(fetchCache)) + resolutionParams.hashCode()) + Objects.hashCode(artifactTypes);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder b = new StringBuilder("Fetch(dependencies=[");
+        for (Dependency dep : dependencies) {
+            b.append(dep.toString());
+            b.append(", ");
+        }
+        b.append("], repositories=[");
+        for (Repository repo : repositories) {
+            b.append(repo.toString());
+            b.append(", ");
+        }
+        b.append("], cache=");
+        b.append(cache.toString());
+        if (mainArtifacts != null) {
+            b.append(", mainArtifacts=");
+            b.append(mainArtifacts.toString());
+        }
+        b.append(", classifiers=[");
+        for (String cl : classifiers) {
+            b.append(cl);
+            b.append(", ");
+        }
+        b.append("]");
+        if (artifactTypes != null) {
+            b.append(", artifactTypes=[");
+            boolean first = true;
+            for (String t : artifactTypes) {
+                if (first)
+                    first = false;
+                else
+                    b.append(", ");
+                b.append(t);
+            }
+            b.append("]");
+        }
+        if (fetchCache != null) {
+            b.append(", fetchCache=");
+            b.append(fetchCache.toString());
+        }
+        b.append(", resolutionParams=");
+        b.append(resolutionParams.toString());
+        b.append(")");
+        return b.toString();
+    }
 
     public static Fetch create() {
         return new Fetch();
@@ -74,8 +144,28 @@ public final class Fetch {
         return this;
     }
 
+    public Fetch withArtifactTypes(Set<String> types) {
+        if (types == null) {
+            this.artifactTypes = null;
+        } else {
+            this.artifactTypes = new HashSet<>(types);
+        }
+        return this;
+    }
+    public Fetch addArtifactTypes(String... types) {
+        if (this.artifactTypes == null)
+            this.artifactTypes = new HashSet<>();
+        this.artifactTypes.addAll(Arrays.asList(types));
+        return this;
+    }
+
     public Fetch withFetchCache(File fetchCache) {
         this.fetchCache = fetchCache;
+        return this;
+    }
+
+    public Fetch withResolutionParams(ResolutionParams resolutionParams) {
+        this.resolutionParams = ResolutionParams.of(resolutionParams);
         return this;
     }
 
@@ -99,8 +189,19 @@ public final class Fetch {
         return Collections.unmodifiableSet(classifiers);
     }
 
+    public Set<String> getArtifactTypes() {
+        if (artifactTypes == null)
+            return null;
+        else
+          return Collections.unmodifiableSet(artifactTypes);
+    }
+
     public File getFetchCache() {
         return fetchCache;
+    }
+
+    public ResolutionParams getResolutionParams() {
+        return resolutionParams;
     }
 
     public List<File> fetch() throws CoursierError {

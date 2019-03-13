@@ -3,6 +3,7 @@ package coursierapi;
 import coursier.internal.api.ApiHelper;
 
 import java.io.File;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
 public final class Cache {
@@ -19,6 +20,35 @@ public final class Cache {
 
     public static Cache create() {
         return new Cache();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Cache) {
+            Cache other = (Cache) obj;
+            return this.pool.equals(other.pool) &&
+                    this.location.equals(other.location) &&
+                    Objects.equals(this.logger, other.logger);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return 37 * (37 * (17 + pool.hashCode()) + location.hashCode()) + Objects.hashCode(logger);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder b = new StringBuilder("Cache(pool=");
+        b.append(pool.toString());
+        b.append(", location=");
+        b.append(location.toString());
+        if (logger != null) {
+            b.append(", logger=");
+            b.append(logger.toString());
+        }
+        return b.toString();
     }
 
     public Cache withPool(ExecutorService pool) {

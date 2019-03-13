@@ -19,6 +19,11 @@ public final class MavenRepository implements Repository, Serializable {
         return new MavenRepository(base);
     }
 
+    public static MavenRepository of(MavenRepository repository) {
+        return new MavenRepository(repository.getBase())
+                .withCredentials(repository.getCredentials());
+    }
+
 
     @Override
     public boolean equals(Object obj) {
@@ -34,7 +39,7 @@ public final class MavenRepository implements Repository, Serializable {
 
     @Override
     public int hashCode() {
-        return 37 * (17 + base.hashCode()) + credentials.hashCode();
+        return 37 * (17 + base.hashCode()) + Objects.hashCode(credentials);
     }
 
     @Override
