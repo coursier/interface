@@ -11,7 +11,8 @@ object Check {
       .asScala
       .map(_.getName)
       .filter { n =>
-        !n.startsWith("META-INF/") && !n.startsWith(ns + "/")
+        !n.startsWith("META-INF/") && !n.startsWith(ns + "/") &&
+          n != "reflect.properties" // scala-reflect adds that
       }
       .toVector
       .sorted
