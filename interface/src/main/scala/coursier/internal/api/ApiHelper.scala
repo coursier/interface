@@ -12,7 +12,6 @@ import coursier.core.{Authentication, Configuration}
 import coursier.error.{CoursierError, FetchError, ResolutionError}
 import coursier.ivy.IvyRepository
 import coursier.params.ResolutionParams
-import coursier.util.Parse.ModuleRequirements
 import coursier.util.Task
 
 import scala.collection.JavaConverters._
@@ -39,7 +38,7 @@ object ApiHelper {
     WrappedLogger.of(CacheLogger.nop)
 
   def parseModule(s: String, scalaVersion: String): coursierapi.Module =
-    coursier.util.Parse.module(s, scalaVersion) match {
+    coursier.parse.ModuleParser.module(s, scalaVersion) match {
       case Left(err) =>
         throw new IllegalArgumentException(err)
       case Right(m) =>
@@ -47,16 +46,11 @@ object ApiHelper {
     }
 
   def parseDependency(s: String, scalaVersion: String): coursierapi.Dependency =
-    coursier.util.Parse.moduleVersionConfig(
-      s,
-      ModuleRequirements(defaultConfiguration = Configuration.empty),
-      transitive = true,
-      scalaVersion
-    ) match {
+    coursier.parse.DependencyParser.dependency(s, scalaVersion, Configuration.empty) match {
       case Left(err) =>
         throw new IllegalArgumentException(err)
-      case Right((dep, params)) =>
-        // TODO Handle other Dependency fields, and params
+      case Right(dep) =>
+        // TODO Handle other Dependency fields
         dependency(dep)
     }
 
