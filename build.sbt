@@ -90,7 +90,7 @@ lazy val interface = project
     },
 
     Settings.shared,
-    libraryDependencies += "io.get-coursier" %% "coursier" % "1.1.0-M14-6",
+    libraryDependencies += "io.get-coursier" %% "coursier" % "1.1.0-M14-7",
 
     libraryDependencies += "com.lihaoyi" %% "utest" % "0.6.7" % Test,
     testFrameworks += new TestFramework("utest.runner.Framework"),
