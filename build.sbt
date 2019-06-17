@@ -4,7 +4,7 @@ import com.tonicsystems.jarjar.transform.config.ClassRename
 import com.tonicsystems.jarjar.transform.jar.DefaultJarProcessor
 import com.typesafe.tools.mima.core.{MissingClassProblem, Problem, ProblemFilters}
 
-import scala.xml.{Node => XmlNode, NodeSeq => XmlNodeSeq, _}
+import scala.xml.{Node => XmlNode, _}
 import scala.xml.transform.{RewriteRule, RuleTransformer}
 
 inThisBuild(List(
