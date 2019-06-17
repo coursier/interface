@@ -15,8 +15,10 @@ object Settings {
     javacOptions ++= Seq(
       "-source", "1.8",
       "-target", "1.8"
-    ),
-    // mima
+    )
+  )
+
+  lazy val mima = Seq(
     MimaPlugin.autoImport.mimaPreviousArtifacts := {
       Mima.binaryCompatibilityVersions.map { ver =>
         (organization.value % moduleName.value % ver).cross(crossVersion.value)
