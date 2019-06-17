@@ -5,18 +5,19 @@ import sbt.Keys._
 
 object Settings {
 
-  private def scala211 = "2.11.12"
   def scala212 = "2.12.8"
 
   lazy val shared = Seq(
     scalaVersion := scala212,
-    crossScalaVersions := Seq(scala212, scala211),
+    crossScalaVersions := Seq(scala212),
     scalacOptions += "-target:jvm-1.8",
     javacOptions ++= Seq(
       "-source", "1.8",
       "-target", "1.8"
-    ),
-    // mima
+    )
+  )
+
+  lazy val mima = Seq(
     MimaPlugin.autoImport.mimaPreviousArtifacts := {
       Mima.binaryCompatibilityVersions.map { ver =>
         (organization.value % moduleName.value % ver).cross(crossVersion.value)

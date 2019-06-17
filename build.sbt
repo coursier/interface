@@ -4,7 +4,7 @@ import com.tonicsystems.jarjar.transform.config.ClassRename
 import com.tonicsystems.jarjar.transform.jar.DefaultJarProcessor
 import com.typesafe.tools.mima.core.{MissingClassProblem, Problem, ProblemFilters}
 
-import scala.xml.{Node => XmlNode, NodeSeq => XmlNodeSeq, _}
+import scala.xml.{Node => XmlNode, _}
 import scala.xml.transform.{RewriteRule, RuleTransformer}
 
 inThisBuild(List(
@@ -56,6 +56,7 @@ lazy val interface = project
     proguardOptions.in(Proguard) ++= Seq(
       "-dontwarn",
       "-dontobfuscate",
+      "-dontoptimize",
       "-keep class coursierapi.** {\n  public protected *;\n}",
     ),
     javaOptions.in(Proguard, proguard) := Seq("-Xmx3172M"),
@@ -90,6 +91,7 @@ lazy val interface = project
     },
 
     Settings.shared,
+    Settings.mima,
     libraryDependencies += "io.get-coursier" %% "coursier" % "2.0.0-RC2-2",
 
     libraryDependencies += "com.lihaoyi" %% "utest" % "0.6.7" % Test,
@@ -115,6 +117,7 @@ lazy val interpolators = project
   .dependsOn(interface)
   .settings(
     Settings.shared,
+    Settings.mima,
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided,
       "com.lihaoyi" %% "utest" % "0.6.7" % Test
@@ -125,6 +128,20 @@ lazy val interpolators = project
       // only used at compile time, not runtime
       ProblemFilters.exclude[MissingClassProblem]("coursierapi.Interpolators$Macros$"),
     )
+  )
+
+lazy val `interface-test` = project
+  // .dependsOn(interface)
+  .settings(
+    Settings.shared,
+    skip.in(publish) := true,
+    autoScalaLibrary := false,
+    crossVersion := CrossVersion.disabled,
+    libraryDependencies ++= Seq(
+      "junit" % "junit" % "4.12" % Test,
+      "com.novocode" % "junit-interface" % "0.11" % Test
+    ),
+    unmanagedClasspath.in(Test) += finalPackageBin.in(interface).value
   )
 
 skip.in(publish) := true
