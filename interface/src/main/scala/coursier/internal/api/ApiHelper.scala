@@ -145,7 +145,7 @@ object ApiHelper {
     }
 
   def credentials(auth: Authentication): Credentials =
-    coursierapi.Credentials.of(auth.user, auth.password)
+    coursierapi.Credentials.of(auth.user, auth.passwordOpt.getOrElse(""))
 
   def repository(repo: Repository): coursierapi.Repository =
     repo match {
