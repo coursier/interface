@@ -27,6 +27,17 @@ object ApiHelper {
       }
       .toArray
 
+  def ivy2Local(): coursierapi.IvyRepository = {
+    val repo = coursierapi.IvyRepository.of(
+      LocalRepositories.ivy2Local.pattern.string,
+      LocalRepositories.ivy2Local.metadataPatternOpt.map(_.string).orNull
+    )
+    repo.withDropInfoAttributes(LocalRepositories.ivy2Local.dropInfoAttributes)
+  }
+
+  def central(): coursierapi.MavenRepository =
+    coursierapi.MavenRepository.of(Repositories.central.root)
+
   def defaultPool(): ExecutorService =
     CacheDefaults.pool
   def defaultLocation(): File =
