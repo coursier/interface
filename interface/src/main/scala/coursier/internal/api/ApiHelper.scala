@@ -244,9 +244,9 @@ object ApiHelper {
         coursierapi.error.SimpleResolutionError.of(s.getMessage)
     }
 
-  def doFetch(apiFetch: coursierapi.Fetch): Array[File] = {
+  def doFetch(apiFetch: coursierapi.Fetch): coursierapi.FetchResult = {
 
-    val either = fetch(apiFetch).either()
+    val either = fetch(apiFetch).eitherResult()
 
     // TODO Pass exception causes if any
 
@@ -277,7 +277,15 @@ object ApiHelper {
 
         throw ex
 
-      case Right(res) => res.toArray
+      case Right(res) =>
+        val l = new ju.ArrayList[ju.Map.Entry[coursierapi.Artifact, File]]
+        for ((a, f) <- res.artifacts) {
+          val a0 = coursierapi.Artifact.of(a.url, a.changing, a.optional, ???)
+          val ent = new ju.AbstractMap.SimpleEntry(a0, f)
+          l.add(ent)
+        }
+
+        coursierapi.FetchResult.of(l)
     }
   }
 
