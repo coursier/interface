@@ -27,6 +27,17 @@ object ApiHelper {
       }
       .toArray
 
+  def ivy2Local(): coursierapi.IvyRepository = {
+    val repo = coursierapi.IvyRepository.of(
+      LocalRepositories.ivy2Local.pattern.string,
+      LocalRepositories.ivy2Local.metadataPatternOpt.map(_.string).orNull
+    )
+    repo.withDropInfoAttributes(LocalRepositories.ivy2Local.dropInfoAttributes)
+  }
+
+  def central(): coursierapi.MavenRepository =
+    coursierapi.MavenRepository.of(Repositories.central.root)
+
   def defaultPool(): ExecutorService =
     CacheDefaults.pool
   def defaultLocation(): File =
@@ -64,7 +75,8 @@ object ApiHelper {
     IvyRepository.parse(
       ivy.getPattern,
       Option(ivy.getMetadataPattern).filter(_.nonEmpty),
-      authentication = authenticationOpt(ivy.getCredentials)
+      authentication = authenticationOpt(ivy.getCredentials),
+      dropInfoAttributes = ivy.getDropInfoAttributes
     ) match {
       case Left(err) =>
         throw new Exception(s"Invalid Ivy repository $ivy: $err")
@@ -182,19 +194,9 @@ object ApiHelper {
       .withForcedProperties(params.getForcedProperties.asScala.iterator.toMap)
   }
 
-  def fetch(fetch: coursierapi.Fetch): Fetch[Task] = {
+  def cache(cache: coursierapi.Cache): FileCache[Task] = {
 
-    val dependencies = fetch
-      .getDependencies
-      .asScala
-      .map(dependency)
-
-    val repositories = fetch
-      .getRepositories
-      .asScala
-      .map(repository)
-
-    val loggerOpt = Option(fetch.getCache.getLogger).map[CacheLogger] {
+    val loggerOpt = Option(cache.getLogger).map[CacheLogger] {
       case s: SimpleLogger =>
         new CacheLogger {
           override def downloadingArtifact(url: String) =
@@ -210,10 +212,25 @@ object ApiHelper {
         w.getLogger
     }
 
-    val cache = FileCache()
-      .withPool(fetch.getCache.getPool)
-      .withLocation(fetch.getCache.getLocation)
+    FileCache()
+      .withPool(cache.getPool)
+      .withLocation(cache.getLocation)
       .withLogger(loggerOpt.getOrElse(CacheLogger.nop))
+  }
+
+  def fetch(fetch: coursierapi.Fetch): Fetch[Task] = {
+
+    val dependencies = fetch
+      .getDependencies
+      .asScala
+      .map(dependency)
+
+    val repositories = fetch
+      .getRepositories
+      .asScala
+      .map(repository)
+
+    val cache0 = cache(fetch.getCache)
 
     val classifiers = fetch
       .getClassifiers
@@ -227,7 +244,7 @@ object ApiHelper {
     var f = Fetch()
       .withDependencies(dependencies)
       .withRepositories(repositories)
-      .withCache(cache)
+      .withCache(cache0)
       .withMainArtifacts(fetch.getMainArtifacts)
       .withClassifiers(classifiers)
       .withFetchCache(Option(fetch.getFetchCache))
@@ -244,9 +261,9 @@ object ApiHelper {
         coursierapi.error.SimpleResolutionError.of(s.getMessage)
     }
 
-  def doFetch(apiFetch: coursierapi.Fetch): Array[File] = {
+  def doFetch(apiFetch: coursierapi.Fetch): coursierapi.FetchResult = {
 
-    val either = fetch(apiFetch).either()
+    val either = fetch(apiFetch).eitherResult()
 
     // TODO Pass exception causes if any
 
@@ -277,8 +294,38 @@ object ApiHelper {
 
         throw ex
 
-      case Right(res) => res.toArray
+      case Right(res) =>
+        val l = new ju.ArrayList[ju.Map.Entry[coursierapi.Artifact, File]]
+        for ((a, f) <- res.artifacts) {
+          val credentials0 = a.authentication.map(credentials).orNull
+          val a0 = coursierapi.Artifact.of(a.url, a.changing, a.optional, credentials0)
+          val ent = new ju.AbstractMap.SimpleEntry(a0, f)
+          l.add(ent)
+        }
+
+        coursierapi.FetchResult.of(l)
     }
+  }
+
+  def doComplete(complete: coursierapi.Complete): coursierapi.CompleteResult = {
+
+    val cache0 = cache(complete.getCache)
+
+    val repositories = complete
+      .getRepositories
+      .asScala
+      .map(repository)
+
+    val res = coursier.complete.Complete(cache0)
+      .withRepositories(repositories)
+      .withScalaBinaryVersion(Option(complete.getScalaBinaryVersion))
+      .withScalaVersion(Option(complete.getScalaVersion))
+      .withInput(complete.getInput)
+      .complete()
+      .unsafeRun()(cache0.ec)
+
+    val l = new ju.ArrayList[String](res._2.asJavaCollection)
+    coursierapi.CompleteResult.of(res._1, l)
   }
 
 }

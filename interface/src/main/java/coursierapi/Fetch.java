@@ -205,8 +205,12 @@ public final class Fetch {
     }
 
     public List<File> fetch() throws CoursierError {
-        File[] files = ApiHelper.doFetch(this);
-        return Arrays.asList(files);
+        FetchResult result = fetchResult();
+        return result.getFiles();
+    }
+
+    public FetchResult fetchResult() throws CoursierError {
+        return ApiHelper.doFetch(this);
     }
 
 }
