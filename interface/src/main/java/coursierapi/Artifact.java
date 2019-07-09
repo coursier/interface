@@ -4,10 +4,10 @@ import java.util.Objects;
 
 public final class Artifact {
 
-    private String url;
-    private boolean changing;
-    private boolean optional;
-    private Credentials credentials;
+    private final String url;
+    private final boolean changing;
+    private final boolean optional;
+    private final Credentials credentials;
 
     public static Artifact of(String url) {
         return new Artifact(url, false, false, null);
@@ -64,5 +64,21 @@ public final class Artifact {
         }
         b.append(")");
         return b.toString();
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public boolean isChanging() {
+        return changing;
+    }
+
+    public boolean isOptional() {
+        return optional;
+    }
+
+    public Credentials getCredentials() {
+        return credentials;
     }
 }
