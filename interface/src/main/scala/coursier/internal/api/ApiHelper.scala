@@ -64,7 +64,8 @@ object ApiHelper {
     IvyRepository.parse(
       ivy.getPattern,
       Option(ivy.getMetadataPattern).filter(_.nonEmpty),
-      authentication = authenticationOpt(ivy.getCredentials)
+      authentication = authenticationOpt(ivy.getCredentials),
+      dropInfoAttributes = ivy.getDropInfoAttributes
     ) match {
       case Left(err) =>
         throw new Exception(s"Invalid Ivy repository $ivy: $err")
