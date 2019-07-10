@@ -53,6 +53,7 @@ lazy val interface = project
       dest
     },
     addArtifact(artifact.in(Compile, packageBin), finalPackageBin),
+    proguardVersion.in(Proguard) := "6.1.1",
     proguardOptions.in(Proguard) ++= Seq(
       "-dontwarn",
       "-dontobfuscate",
