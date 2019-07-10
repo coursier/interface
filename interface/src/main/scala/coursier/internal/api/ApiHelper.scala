@@ -183,6 +183,10 @@ object ApiHelper {
     params0
       .withForceVersions(params.forceVersion.map { case (m, v) => module(m) -> v }.asJava)
       .withForceProperties(params.forcedProperties.asJava)
+      .withProfiles(params.profiles.asJava)
+      .withExclusions(params.exclusions.map { case (o, n) => new ju.AbstractMap.SimpleEntry(o.value, n.value): ju.Map.Entry[String, String] }.asJava)
+      .withUseSystemOsInfo(params.useSystemOsInfo)
+      .withUseSystemJdkVersion(params.useSystemJdkVersion)
   }
 
   def resolutionParams(params: coursierapi.ResolutionParams): ResolutionParams = {
@@ -192,6 +196,10 @@ object ApiHelper {
     params0
       .withForceVersion(params.getForceVersions.asScala.iterator.toMap.map { case (m, v) => module(m) -> v })
       .withForcedProperties(params.getForcedProperties.asScala.iterator.toMap)
+      .withProfiles(params.getProfiles.asScala.toSet)
+      .withExclusions(params.getExclusions.asScala.map { e => (Organization(e.getKey), ModuleName(e.getValue)) }.toSet)
+      .withUseSystemOsInfo(params.getUseSystemOsInfo)
+      .withUseSystemJdkVersion(params.getUseSystemJdkVersion)
   }
 
   def cache(cache: coursierapi.Cache): FileCache[Task] = {
