@@ -1,21 +1,26 @@
 package coursierapi;
 
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public class ResolutionParams implements Serializable {
 
     private Integer maxIterations;
     private final HashMap<Module, String> forceVersions;
     private final HashMap<String, String> forcedProperties;
+    private final HashSet<String> profiles;
+    private final HashSet<Map.Entry<String, String>> exclusions;
+    private boolean useSystemOsInfo;
+    private boolean useSystemJdkVersion;
 
     private ResolutionParams() {
         maxIterations = null;
         forceVersions = new HashMap<>();
         forcedProperties = new HashMap<>();
+        profiles = new HashSet<>();
+        exclusions = new HashSet<>();
+        useSystemOsInfo = true;
+        useSystemJdkVersion = true;
     }
 
     @Override
@@ -23,14 +28,17 @@ public class ResolutionParams implements Serializable {
         if (obj instanceof ResolutionParams) {
             ResolutionParams other = (ResolutionParams) obj;
             return Objects.equals(this.maxIterations, other.maxIterations) &&
-                    this.forcedProperties.equals(other.forcedProperties);
+                    this.forcedProperties.equals(other.forcedProperties) &&
+                    this.profiles.equals(other.profiles) && this.exclusions.equals(other.exclusions) &&
+                    Objects.equals(this.useSystemOsInfo, other.useSystemOsInfo) &&
+                    Objects.equals(this.useSystemJdkVersion, other.useSystemJdkVersion);
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return 37 * (37 * (17 + Objects.hashCode(maxIterations)) + forceVersions.hashCode()) + forcedProperties.hashCode();
+        return 37 * (37 * (37 * (37 * (37 * (37 * (17 + Objects.hashCode(maxIterations)) + forceVersions.hashCode()) + forcedProperties.hashCode()) + profiles.hashCode()) + exclusions.hashCode()) + Boolean.hashCode(useSystemOsInfo)) + Boolean.hashCode(useSystemJdkVersion);
     }
 
     @Override
@@ -80,6 +88,59 @@ public class ResolutionParams implements Serializable {
             }
             b.append("]");
         }
+        if (!profiles.isEmpty()) {
+            if (needSep)
+                b.append(", ");
+            else
+                needSep = true;
+
+            b.append("profiles=[");
+            boolean first = true;
+            for (String profile : profiles) {
+                if (first)
+                    first = false;
+                else
+                    b.append(", ");
+                b.append(profile);
+            }
+            b.append("]");
+        }
+        if (!exclusions.isEmpty()) {
+            if (needSep)
+                b.append(", ");
+            else
+                needSep = true;
+
+            b.append("exclusions=[");
+            boolean first = true;
+            for (Map.Entry<String, String> exclusion : exclusions) {
+                if (first)
+                    first = false;
+                else
+                    b.append(", ");
+                b.append(exclusion.getKey());
+                b.append(":");
+                b.append(exclusion.getValue());
+            }
+            b.append("]");
+        }
+
+        if (needSep)
+            b.append(", ");
+        else
+            needSep = true;
+
+        b.append("useSystemOsInfo=");
+        b.append(useSystemOsInfo);
+
+        if (needSep)
+            b.append(", ");
+        else
+            needSep = true;
+
+        b.append("useSystemJdkVersion=");
+        b.append(useSystemJdkVersion);
+
         b.append(")");
         return b.toString();
     }
@@ -92,7 +153,11 @@ public class ResolutionParams implements Serializable {
         return new ResolutionParams()
                 .withMaxIterations(params.maxIterations)
                 .withForceProperties(params.forcedProperties)
-                .withForceVersions(params.forceVersions);
+                .withForceVersions(params.forceVersions)
+                .withProfiles(params.profiles)
+                .withExclusions(params.exclusions)
+                .withUseSystemOsInfo(params.useSystemOsInfo)
+                .withUseSystemJdkVersion(params.useSystemJdkVersion);
     }
 
     public ResolutionParams withMaxIterations(Integer maxIterations) {
@@ -132,6 +197,45 @@ public class ResolutionParams implements Serializable {
         return this;
     }
 
+    public ResolutionParams addProfile(String profile) {
+        this.profiles.add(profile);
+        return this;
+    }
+    public ResolutionParams removeProfile(String profile) {
+        this.profiles.remove(profile);
+        return this;
+    }
+    public ResolutionParams withProfiles(Set<String> profiles) {
+        this.profiles.clear();
+        this.profiles.addAll(profiles);
+        return this;
+    }
+
+    public ResolutionParams addExclusion(String organization, String moduleName) {
+        // FIXME Make the Map.Entry read-only?
+        this.exclusions.add(new AbstractMap.SimpleEntry<>(organization, moduleName));
+        return this;
+    }
+    public ResolutionParams removeExclusion(String organization, String moduleName) {
+        this.exclusions.remove(new AbstractMap.SimpleEntry<>(organization, moduleName));
+        return this;
+    }
+    public ResolutionParams withExclusions(Set<Map.Entry<String, String>> exclusions) {
+        this.exclusions.clear();
+        this.exclusions.addAll(exclusions);
+        return this;
+    }
+
+    public ResolutionParams withUseSystemOsInfo(boolean useSystemOsInfo) {
+        this.useSystemOsInfo = useSystemOsInfo;
+        return this;
+    }
+
+    public ResolutionParams withUseSystemJdkVersion(boolean useSystemJdkVersion) {
+        this.useSystemJdkVersion = useSystemJdkVersion;
+        return this;
+    }
+
     public Integer getMaxIterations() {
         return maxIterations;
     }
@@ -142,5 +246,21 @@ public class ResolutionParams implements Serializable {
 
     public Map<Module, String> getForceVersions() {
         return Collections.unmodifiableMap(forceVersions);
+    }
+
+    public Set<String> getProfiles() {
+        return Collections.unmodifiableSet(profiles);
+    }
+
+    public Set<Map.Entry<String, String>> getExclusions() {
+        return Collections.unmodifiableSet(exclusions);
+    }
+
+    public boolean getUseSystemOsInfo() {
+        return useSystemOsInfo;
+    }
+
+    public boolean getUseSystemJdkVersion() {
+        return useSystemJdkVersion;
     }
 }
