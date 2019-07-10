@@ -22,5 +22,7 @@ stages:
 jobs:
   include:
   - script: sbt test mimaReportBinaryIssues publishLocal
+  - jdk: openjdk11
+    script: sbt test publishLocal
   - stage: release
     script: sbt ci-release
