@@ -1,7 +1,3 @@
-import com.tonicsystems.jarjar.classpath.ClassPath
-import com.tonicsystems.jarjar.transform.JarTransformer
-import com.tonicsystems.jarjar.transform.config.ClassRename
-import com.tonicsystems.jarjar.transform.jar.DefaultJarProcessor
 import com.typesafe.tools.mima.core.{MissingClassProblem, Problem, ProblemFilters}
 
 import scala.xml.{Node => XmlNode, _}
@@ -28,27 +24,29 @@ lazy val interface = project
   .settings(
     skip.in(publish) := scalaVersion.value != Settings.scala212,
     finalPackageBin := {
-      val log = streams.value.log
+      import org.pantsbuild.jarjar._
+      import org.pantsbuild.jarjar.util.StandaloneJarProcessor
+
       val orig = proguard.in(Proguard).value.head
       val origLastModified = orig.lastModified()
-      val dest = orig.getParentFile / s"${orig.getName.stripSuffix(".jar")}-with-renaming.jar"
+      val dest = orig.getParentFile / s"${orig.getName.stripSuffix(".jar")}-with-renaming-test.jar"
       if (!dest.exists() || dest.lastModified() < origLastModified) {
 
-        val processor = new DefaultJarProcessor
+        def rename(from: String, to: String): Rule = {
+          val rule = new Rule
+          rule.setPattern(from)
+          rule.setResult(to)
+          rule
+        }
 
-        processor.addClassRename(new ClassRename("scala.**", "coursierapi.shaded.scala.@1"))
-        processor.addClassRename(new ClassRename("coursier.**", "coursierapi.shaded.coursier.@1"))
-        processor.addClassRename(new ClassRename("io.github.soc.directories.**", "coursierapi.shaded.directories.@1"))
+        val rules = Seq(
+          rename("scala.**", "coursierapi.shaded.scala.@1"),
+          rename("coursier.**", "coursierapi.shaded.coursier.@1"),
+          rename("io.github.soc.directories.**", "coursierapi.shaded.directories.@1")
+        )
 
-        val transformer = new JarTransformer(dest, processor)
-        val cp = new ClassPath(file(sys.props("user.dir")), Array(orig))
-
-        log.info(s"Generating $dest")
-        transformer.transform(cp)
-
-        Check.onlyNamespace("coursierapi", dest)
-
-        dest.setLastModified(origLastModified)
+        val processor = JJProcessor(rules, true, true)
+        StandaloneJarProcessor.run(orig, dest, processor.proc)
       }
       dest
     },
