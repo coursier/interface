@@ -11,6 +11,7 @@ cache:
   directories:
   - $HOME/.cache
   - $HOME/.sbt
+  - $HOME/.jabba/jdk
 branches:
   only:
   - master
@@ -21,8 +22,6 @@ stages:
     if: (branch = master AND type = push) OR (tag IS present)
 jobs:
   include:
-  - script: sbt test mimaReportBinaryIssues publishLocal
-  - jdk: openjdk11
-    script: sbt test publishLocal
+  - script: ./.travis.sh
   - stage: release
     script: sbt ci-release

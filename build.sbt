@@ -140,7 +140,21 @@ lazy val `interface-test` = project
       "junit" % "junit" % "4.12" % Test,
       "com.novocode" % "junit-interface" % "0.11" % Test
     ),
-    unmanagedClasspath.in(Test) += finalPackageBin.in(interface).value
+    libraryDependencies ++= {
+      val org = organization.in(interface).value
+      val name = moduleName.in(interface).value
+      sys.env.get("TEST_VERSION").toSeq.map { v =>
+        org % name % v
+      }
+    },
+    unmanagedClasspath.in(Test) ++= Def.taskDyn {
+      if (sys.env.get("TEST_VERSION").isEmpty)
+        Def.task {
+          Seq(finalPackageBin.in(interface).value)
+	}
+      else
+        Def.task(Seq.empty[File])
+    }.value
   )
 
 skip.in(publish) := true
