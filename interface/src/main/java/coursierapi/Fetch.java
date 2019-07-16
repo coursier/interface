@@ -105,6 +105,12 @@ public final class Fetch {
         return this;
     }
 
+    public Fetch withDependencies(Dependency... dependencies) {
+        this.dependencies.clear();
+        this.dependencies.addAll(Arrays.asList(dependencies));
+        return this;
+    }
+
     public Fetch addRepositories(Repository... repositories) {
         this.repositories.addAll(Arrays.asList(repositories));
         return this;
