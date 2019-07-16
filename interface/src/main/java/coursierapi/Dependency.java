@@ -7,8 +7,8 @@ import java.util.*;
 
 public final class Dependency implements Serializable {
 
-    private final Module module;
-    private final String version;
+    private Module module;
+    private String version;
     private final Set<Map.Entry<String, String>> exclusions;
     private String configuration;
     private String type;
@@ -45,6 +45,16 @@ public final class Dependency implements Serializable {
         return ApiHelper.parseDependency(dep, scalaVersion.getVersion());
     }
 
+
+    public Dependency withModule(Module module) {
+        this.module = module;
+        return this;
+    }
+
+    public Dependency withVersion(String version) {
+        this.version = version;
+        return this;
+    }
 
     public Dependency addExclusion(String organization, String name) {
         this.exclusions.add(new AbstractMap.SimpleImmutableEntry<>(organization, name));
