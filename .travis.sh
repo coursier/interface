@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-set -ex
+set -exo pipefail
 
 TEST_VERSION="0.1.0-test"
 sbt \
-  test \
+  +test \
   mimaReportBinaryIssues \
   'set version in ThisBuild := "'"$TEST_VERSION"'"' \
-  publishLocal 2>&1 | grep -v 'Maybe this is program'
+  publishLocal 2>&1 | grep -v 'Maybe this is ' | grep -v '^Renamed '
 
 # test that things work from JDK 11
 # not actually building things from it, running into weird proguard issues…

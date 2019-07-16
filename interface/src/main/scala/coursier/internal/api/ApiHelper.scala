@@ -232,11 +232,13 @@ object ApiHelper {
       .getDependencies
       .asScala
       .map(dependency)
+      .toVector
 
     val repositories = fetch
       .getRepositories
       .asScala
       .map(repository)
+      .toVector
 
     val cache0 = cache(fetch.getCache)
 
@@ -323,6 +325,7 @@ object ApiHelper {
       .getRepositories
       .asScala
       .map(repository)
+      .toVector
 
     val res = coursier.complete.Complete(cache0)
       .withRepositories(repositories)
