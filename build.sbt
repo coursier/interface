@@ -22,7 +22,7 @@ lazy val finalPackageBin = taskKey[File]("")
 lazy val interface = project
   .enablePlugins(SbtProguard)
   .settings(
-    skip.in(publish) := scalaVersion.value != Settings.scala212,
+    skip.in(publish) := scalaVersion.value != Settings.scala213,
     finalPackageBin := {
       import org.pantsbuild.jarjar._
       import org.pantsbuild.jarjar.util.StandaloneJarProcessor
@@ -90,7 +90,7 @@ lazy val interface = project
     },
 
     Settings.shared,
-    Settings.mima,
+    Settings.mima(),
     libraryDependencies += "io.get-coursier" %% "coursier" % "2.0.0-RC2-6",
 
     libraryDependencies += "com.lihaoyi" %% "utest" % "0.7.1" % Test,
@@ -108,7 +108,15 @@ lazy val interface = project
     mimaPreviousArtifacts := mimaPreviousArtifacts.value.filter(_.revision != "0.0.1"),
 
     // was cross-versioned publishing in 0.0.1
-    mimaPreviousArtifacts += organization.value %% "interface" % "0.0.1",
+    mimaPreviousArtifacts ++= {
+      val sv = scalaVersion.value
+      // TODO When removing 2.12 support in the future, use org % interface_2.12 below?
+      val is212 = sv.startsWith("2.12")
+      if (is212)
+        Set(organization.value %% "interface" % "0.0.1")
+      else
+        Set.empty[ModuleID]
+    },
 
   )
 
@@ -116,7 +124,7 @@ lazy val interpolators = project
   .dependsOn(interface)
   .settings(
     Settings.shared,
-    Settings.mima,
+    Settings.mima(no213 = true),
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided,
       "com.lihaoyi" %% "utest" % "0.7.1" % Test
