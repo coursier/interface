@@ -54,6 +54,7 @@ lazy val interface = project
         ZipUtil.removeFromZip(tmpDest, dest, Set("LICENSE", "NOTICE"))
         tmpDest.delete()
       }
+      Check.onlyNamespace("coursierapi", dest)
       dest
     },
     addArtifact(artifact.in(Compile, packageBin), finalPackageBin),
