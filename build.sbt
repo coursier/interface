@@ -31,6 +31,7 @@ lazy val interface = project
       val origLastModified = orig.lastModified()
       val dest = orig.getParentFile / s"${orig.getName.stripSuffix(".jar")}-with-renaming-test.jar"
       if (!dest.exists() || dest.lastModified() < origLastModified) {
+        val tmpDest = orig.getParentFile / s"${orig.getName.stripSuffix(".jar")}-with-renaming-test-0.jar"
 
         def rename(from: String, to: String): Rule = {
           val rule = new Rule
@@ -42,12 +43,18 @@ lazy val interface = project
         val rules = Seq(
           rename("scala.**", "coursierapi.shaded.scala.@1"),
           rename("coursier.**", "coursierapi.shaded.coursier.@1"),
-          rename("io.github.soc.directories.**", "coursierapi.shaded.directories.@1")
+          rename("io.github.soc.directories.**", "coursierapi.shaded.directories.@1"),
+          rename("org.fusesource.**", "coursierapi.shaded.org.fusesource.@1"),
+          rename("org.jline.**", "coursierapi.shaded.org.jline.@1")
         )
 
         val processor = JJProcessor(rules, true, true)
-        StandaloneJarProcessor.run(orig, dest, processor.proc)
+        StandaloneJarProcessor.run(orig, tmpDest, processor.proc)
+
+        ZipUtil.removeFromZip(tmpDest, dest, Set("LICENSE", "NOTICE"))
+        tmpDest.delete()
       }
+      Check.onlyNamespace("coursierapi", dest)
       dest
     },
     addArtifact(artifact.in(Compile, packageBin), finalPackageBin),

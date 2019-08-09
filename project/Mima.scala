@@ -17,6 +17,7 @@ object Mima {
       .filter(_.startsWith("v"))
       .map(_.stripPrefix("v"))
       .filter(stable)
+      .filter(_ != "0.0.11") // borked release, jline and jansi not shaded in it
       .toSet
 
 }
