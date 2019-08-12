@@ -145,6 +145,7 @@ lazy val interpolators = project
   )
 
 lazy val `interface-test` = project
+  .disablePlugins(MimaPlugin)
   // .dependsOn(interface)
   .settings(
     Settings.shared,
@@ -173,3 +174,4 @@ lazy val `interface-test` = project
   )
 
 skip.in(publish) := true
+disablePlugins(MimaPlugin)
