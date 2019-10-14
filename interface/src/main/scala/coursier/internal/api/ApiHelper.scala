@@ -329,8 +329,8 @@ object ApiHelper {
 
     val res = coursier.complete.Complete(cache0)
       .withRepositories(repositories)
-      .withScalaBinaryVersion(Option(complete.getScalaBinaryVersion))
-      .withScalaVersion(Option(complete.getScalaVersion))
+      .withScalaBinaryVersionOpt(Option(complete.getScalaBinaryVersion))
+      .withScalaVersionOpt(Option(complete.getScalaVersion))
       .withInput(complete.getInput)
       .complete()
       .unsafeRun()(cache0.ec)
