@@ -113,13 +113,11 @@ object ApiHelper {
     val tpe = Type(dep.getType)
     val classifier = Classifier(dep.getClassifier)
 
-    Dependency(
-      module0, dep.getVersion,
-      exclusions = exclusions,
-      configuration = configuration,
-      attributes = Attributes(tpe, classifier),
-      transitive = dep.isTransitive
-    )
+    Dependency(module0, dep.getVersion)
+      .withExclusions(exclusions)
+      .withConfiguration(configuration)
+      .withAttributes(Attributes(tpe, classifier))
+      .withTransitive(dep.isTransitive)
   }
 
   def dependency(dep: Dependency): coursierapi.Dependency =
