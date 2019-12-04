@@ -49,7 +49,7 @@ public final class CompleteResult {
 
             b.append(completion);
         }
-        b.append(")");
+        b.append("])");
         return b.toString();
     }
 
