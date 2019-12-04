@@ -22,6 +22,15 @@ lazy val finalPackageBin = taskKey[File]("")
 lazy val interface = project
   .enablePlugins(SbtProguard)
   .settings(
+    moduleName := {
+      val former = moduleName.value
+      val sv = scalaVersion.value
+      val sbv = sv.split('.').take(2).mkString(".")
+      if (sv == Settings.scala213)
+        former
+      else
+        former + "-scala-" + sbv + "-shaded"
+    },
     finalPackageBin := {
       import org.pantsbuild.jarjar._
       import org.pantsbuild.jarjar.util.StandaloneJarProcessor
@@ -108,12 +117,7 @@ lazy val interface = project
     ),
 
     autoScalaLibrary := false,
-    crossVersion := {
-      if (scalaVersion.value == Settings.scala213)
-        CrossVersion.disabled
-      else
-        CrossVersion.binary
-    },
+    crossVersion := CrossVersion.disabled,
 
     // filtering out non cross versioned module in 0.0.1 (published cross-versioned there, added below)
     mimaPreviousArtifacts := mimaPreviousArtifacts.value.filter(_.revision != "0.0.1"),
