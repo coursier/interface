@@ -1,6 +1,7 @@
 package coursier.internal.api
 
 import java.io.{File, OutputStreamWriter}
+import java.time.LocalDateTime
 import java.{util => ju}
 import java.util.concurrent.ExecutorService
 
@@ -14,6 +15,7 @@ import coursier.ivy.IvyRepository
 import coursier.params.ResolutionParams
 import coursier.util.Task
 
+import scala.collection.JavaConverters
 import scala.collection.JavaConverters._
 
 object ApiHelper {
@@ -224,6 +226,19 @@ object ApiHelper {
       .withLogger(loggerOpt.getOrElse(CacheLogger.nop))
   }
 
+  def cache(cache: FileCache[Task]): coursierapi.Cache = {
+
+    val loggerOpt = cache.logger match {
+      // case CacheLogger.nop => None
+      case logger => Some(WrappedLogger.of(logger))
+    }
+
+    coursierapi.Cache.create()
+      .withPool(cache.pool)
+      .withLocation(cache.location)
+      .withLogger(loggerOpt.orNull)
+  }
+
   def fetch(fetch: coursierapi.Fetch): Fetch[Task] = {
 
     val dependencies = fetch
@@ -260,6 +275,46 @@ object ApiHelper {
     if (fetch.getArtifactTypes != null)
       f = f.withArtifactTypes(fetch.getArtifactTypes.asScala.toSet[String].map(Type(_)))
     f
+  }
+
+  def fetch(fetch: Fetch[Task]): coursierapi.Fetch = {
+
+    val dependencies = fetch
+      .dependencies
+      .map(dependency)
+
+    val repositories = fetch
+      .repositories
+      .map(repository)
+
+    val cache0 = cache(
+      fetch.cache match {
+        case f: FileCache[Task] => f
+        case c => sys.error(s"Unsupported cache type: $c")
+      }
+    )
+
+    val classifiers = JavaConverters.setAsJavaSet(
+      fetch
+        .classifiers
+        .map(_.value)
+    )
+
+    val params = resolutionParams(fetch.resolutionParams)
+
+    val artifactTypesOpt = fetch
+      .artifactTypesOpt
+      .map(s => JavaConverters.setAsJavaSet(s.map(_.value)))
+
+    coursierapi.Fetch.create()
+      .withDependencies(dependencies: _*)
+      .withRepositories(repositories: _*)
+      .withCache(cache0)
+      .withMainArtifacts(fetch.mainArtifactsOpt.map(b => b: java.lang.Boolean).orNull)
+      .withClassifiers(classifiers)
+      .withFetchCache(fetch.fetchCacheOpt.orNull)
+      .withResolutionParams(params)
+      .withArtifactTypes(artifactTypesOpt.orNull)
   }
 
   private def simpleResError(err: ResolutionError.Simple): coursierapi.error.SimpleResolutionError =
@@ -333,8 +388,100 @@ object ApiHelper {
       .complete()
       .unsafeRun()(cache0.ec)
 
-    val l = new ju.ArrayList[String](res._2.asJavaCollection)
-    coursierapi.CompleteResult.of(res._1, l)
+    // FIXME Exceptions should be translated from coursier.* stuff to coursierapi.error.* ones
+
+    coursierapi.CompleteResult.of(res._1, JavaConverters.seqAsJavaList(res._2))
+  }
+
+  def versionListing(versions: coursier.core.Versions): coursierapi.VersionListing =
+    coursierapi.VersionListing.of(
+      versions.latest,
+      versions.release,
+      JavaConverters.seqAsJavaList(versions.available),
+      versions
+        .lastUpdated
+        .map { dt =>
+          LocalDateTime.of(
+            dt.year,
+            dt.month,
+            dt.day,
+            dt.hour,
+            dt.minute,
+            dt.second
+          )
+        }
+        .orNull
+    )
+
+  def versionListing(versions: coursierapi.VersionListing): coursier.core.Versions =
+    coursier.core.Versions(
+      versions.getLatest,
+      versions.getRelease,
+      versions.getAvailable.asScala.toList,
+      Option(versions.getLastUpdated).map { dt =>
+        coursier.core.Versions.DateTime(
+          dt.getYear,
+          dt.getMonthValue,
+          dt.getDayOfMonth,
+          dt.getHour,
+          dt.getMinute,
+          dt.getSecond
+        )
+      }
+    )
+
+  def versions(versions: coursierapi.Versions): coursier.Versions[Task] = {
+
+    val cache0 = cache(versions.getCache)
+
+    val repositories = versions
+      .getRepositories
+      .asScala
+      .map(repository)
+      .toVector
+
+    coursier.Versions(cache0)
+      .withRepositories(repositories)
+      .withModule(module(versions.getModule))
+  }
+
+  def versions(versions: coursier.Versions[Task]): coursierapi.Versions = {
+
+    val cache0 = cache(
+      versions.cache match {
+        case f: FileCache[Task] => f
+        case c => sys.error(s"Unsupported cache type: $c")
+      }
+    )
+
+    coursierapi.Versions.create()
+      .withCache(cache0)
+      .withRepositories(versions.repositories.map(repository): _*)
+      .withModule(versions.moduleOpt.map(module).orNull)
+  }
+
+  def getVersions(versions0: coursierapi.Versions): coursierapi.VersionsResult = {
+
+    val ver = versions(versions0)
+    val res = ver.result().unsafeRun()(ver.cache.ec)
+
+    // FIXME Exceptions should be translated from coursier.* stuff to coursierapi.error.* ones
+
+    val errors = res.results.collect {
+      case (repo, Left(error)) =>
+        new ju.AbstractMap.SimpleImmutableEntry(repository(repo), error): ju.Map.Entry[coursierapi.Repository, String]
+    }
+
+    val listings = res.results.collect {
+      case (repo, Right(ver)) =>
+        new ju.AbstractMap.SimpleImmutableEntry(repository(repo), versionListing(ver)): ju.Map.Entry[coursierapi.Repository, coursierapi.VersionListing]
+    }
+
+    coursierapi.VersionsResult.of(
+      JavaConverters.seqAsJavaList(errors),
+      JavaConverters.seqAsJavaList(listings),
+      versionListing(res.versions)
+    )
   }
 
 }
