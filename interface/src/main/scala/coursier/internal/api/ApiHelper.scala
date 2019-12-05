@@ -270,7 +270,7 @@ object ApiHelper {
       .withCache(cache0)
       .withMainArtifacts(fetch.getMainArtifacts)
       .withClassifiers(classifiers)
-      .withFetchCache(Option(fetch.getFetchCache))
+      .withFetchCache(Option(fetch.getFetchCacheIKnowWhatImDoing))
       .withResolutionParams(params)
     if (fetch.getArtifactTypes != null)
       f = f.withArtifactTypes(fetch.getArtifactTypes.asScala.toSet[String].map(Type(_)))
@@ -312,7 +312,7 @@ object ApiHelper {
       .withCache(cache0)
       .withMainArtifacts(fetch.mainArtifactsOpt.map(b => b: java.lang.Boolean).orNull)
       .withClassifiers(classifiers)
-      .withFetchCache(fetch.fetchCacheOpt.orNull)
+      .withFetchCacheIKnowWhatImDoing(fetch.fetchCacheOpt.orNull)
       .withResolutionParams(params)
       .withArtifactTypes(artifactTypesOpt.orNull)
   }
@@ -326,7 +326,14 @@ object ApiHelper {
 
   def doFetch(apiFetch: coursierapi.Fetch): coursierapi.FetchResult = {
 
-    val either = fetch(apiFetch).eitherResult()
+    val fetch0 = fetch(apiFetch)
+    val either =
+      if (apiFetch.getFetchCacheIKnowWhatImDoing == null)
+        fetch0.eitherResult().map(_.artifacts)
+      else {
+        val dummyArtifact = coursier.util.Artifact("", Map(), Map(), false, false, None)
+        fetch0.either().map(_.map((dummyArtifact, _)))
+      }
 
     // TODO Pass exception causes if any
 
@@ -357,9 +364,9 @@ object ApiHelper {
 
         throw ex
 
-      case Right(res) =>
+      case Right(artifacts) =>
         val l = new ju.ArrayList[ju.Map.Entry[coursierapi.Artifact, File]]
-        for ((a, f) <- res.artifacts) {
+        for ((a, f) <- artifacts) {
           val credentials0 = a.authentication.map(credentials).orNull
           val a0 = coursierapi.Artifact.of(a.url, a.changing, a.optional, credentials0)
           val ent = new ju.AbstractMap.SimpleEntry(a0, f)

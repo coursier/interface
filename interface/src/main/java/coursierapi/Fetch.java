@@ -165,7 +165,23 @@ public final class Fetch {
         return this;
     }
 
+    /**
+     * @deprecated Ignored. See {@link #withFetchCacheIKnowWhatImDoing(File)} if you
+     * really want to rely on a fetch result cache, but beware its limitations.
+     */
+    @Deprecated
     public Fetch withFetchCache(File fetchCache) {
+        // ignored
+        return this;
+    }
+
+    /**
+     * Cache the list of artifacts itself.
+     *
+     * Beware that if the fetch cache is read, the returned
+     * `Artifact`s are empty, only the `File`s are valid.
+     */
+    public Fetch withFetchCacheIKnowWhatImDoing(File fetchCache) {
         this.fetchCache = fetchCache;
         return this;
     }
@@ -202,7 +218,16 @@ public final class Fetch {
           return Collections.unmodifiableSet(artifactTypes);
     }
 
+    /**
+     * @deprecated See {@link #getFetchCacheIKnowWhatImDoing()}, and
+     * {@link #withFetchCacheIKnowWhatImDoing(File)}.
+     */
+    @Deprecated
     public File getFetchCache() {
+        return null;
+    }
+
+    public File getFetchCacheIKnowWhatImDoing() {
         return fetchCache;
     }
 
