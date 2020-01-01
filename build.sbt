@@ -162,7 +162,7 @@ lazy val `interface-test` = project
     autoScalaLibrary := false,
     crossVersion := CrossVersion.disabled,
     libraryDependencies ++= Seq(
-      "junit" % "junit" % "4.12" % Test,
+      "junit" % "junit" % "4.13" % Test,
       "com.novocode" % "junit-interface" % "0.11" % Test
     ),
     libraryDependencies ++= {
