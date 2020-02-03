@@ -51,7 +51,6 @@ lazy val interface = project
         val rules = Seq(
           rename("scala.**", "coursierapi.shaded.scala.@1"),
           rename("coursier.**", "coursierapi.shaded.coursier.@1"),
-          rename("io.github.soc.directories.**", "coursierapi.shaded.directories.@1"),
           rename("org.fusesource.**", "coursierapi.shaded.org.fusesource.@1"),
           rename("org.jline.**", "coursierapi.shaded.org.jline.@1")
         )
