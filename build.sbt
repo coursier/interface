@@ -52,7 +52,7 @@ lazy val interface = project
           rename("scala.**", "coursierapi.shaded.scala.@1"),
           rename("coursier.**", "coursierapi.shaded.coursier.@1"),
           rename("org.fusesource.**", "coursierapi.shaded.org.fusesource.@1"),
-          rename("org.jline.**", "coursierapi.shaded.org.jline.@1")
+          rename("io.github.alexarchambault.windowsansi.**", "coursierapi.shaded.windowsansi.@1"),
         )
 
         val processor = JJProcessor(rules, true, true)
@@ -106,7 +106,7 @@ lazy val interface = project
 
     Settings.shared,
     Settings.mima(),
-    libraryDependencies += "io.get-coursier" %% "coursier" % "2.0.0-RC5-6",
+    libraryDependencies += "io.get-coursier" %% "coursier" % "2.0.0-RC6",
 
     libraryDependencies += "com.lihaoyi" %% "utest" % "0.7.3" % Test,
     testFrameworks += new TestFramework("utest.runner.Framework"),
