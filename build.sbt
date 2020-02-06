@@ -108,7 +108,7 @@ lazy val interface = project
     Settings.mima(),
     libraryDependencies += "io.get-coursier" %% "coursier" % "2.0.0-RC6-1",
 
-    libraryDependencies += "com.lihaoyi" %% "utest" % "0.7.3" % Test,
+    libraryDependencies += "com.lihaoyi" %% "utest" % "0.7.4" % Test,
     testFrameworks += new TestFramework("utest.runner.Framework"),
 
     mimaBinaryIssueFilters ++= Seq(
@@ -142,7 +142,7 @@ lazy val interpolators = project
     Settings.mima(no213 = true),
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided,
-      "com.lihaoyi" %% "utest" % "0.7.3" % Test
+      "com.lihaoyi" %% "utest" % "0.7.4" % Test
     ),
     testFrameworks += new TestFramework("utest.runner.Framework"),
 
