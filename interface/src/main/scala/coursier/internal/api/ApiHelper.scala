@@ -331,10 +331,10 @@ object ApiHelper {
     val fetch0 = fetch(apiFetch)
     val either =
       if (apiFetch.getFetchCacheIKnowWhatImDoing == null)
-        fetch0.eitherResult().map(_.artifacts)
+        fetch0.eitherResult()
       else {
-        val dummyArtifact = coursier.util.Artifact("", Map(), Map(), false, false, None)
-        fetch0.either().map(_.map((dummyArtifact, _)))
+        val dummyArtifact = coursier.util.Artifact("", Map(), Map(), changing = false, optional = false, None)
+        fetch0.either().map(files => Fetch.Result().withExtraArtifacts(files.map((dummyArtifact, _))))
       }
 
     // TODO Pass exception causes if any
@@ -366,16 +366,23 @@ object ApiHelper {
 
         throw ex
 
-      case Right(artifacts) =>
-        val l = new ju.ArrayList[ju.Map.Entry[coursierapi.Artifact, File]]
-        for ((a, f) <- artifacts) {
+      case Right(result) =>
+        val artifactFiles = new ju.ArrayList[ju.Map.Entry[coursierapi.Artifact, File]]
+        for ((a, f) <- result.artifacts) {
           val credentials0 = a.authentication.map(credentials).orNull
           val a0 = coursierapi.Artifact.of(a.url, a.changing, a.optional, credentials0)
           val ent = new ju.AbstractMap.SimpleEntry(a0, f)
-          l.add(ent)
+          artifactFiles.add(ent)
         }
 
-        coursierapi.FetchResult.of(l)
+        val deps = new ju.ArrayList[coursierapi.Dependency]
+        result
+          .resolution
+          .orderedDependencies
+          .map(dependency)
+          .foreach(deps.add)
+
+        coursierapi.FetchResult.of(artifactFiles, deps)
     }
   }
 

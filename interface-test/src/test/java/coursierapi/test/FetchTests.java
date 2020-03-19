@@ -2,6 +2,7 @@ package coursierapi.test;
 
 import coursierapi.Dependency;
 import coursierapi.Fetch;
+import coursierapi.FetchResult;
 import coursierapi.error.CoursierError;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -19,21 +20,27 @@ public class FetchTests {
         Fetch fetch = Fetch.create()
                 .addDependencies(dep);
 
-        List<File> files;
+        FetchResult result;
         try {
-            files = fetch.fetch();
+            result = fetch.fetchResult();
         } catch (CoursierError e) {
             throw new RuntimeException(e);
         }
 
         Set<String> fileNames = new HashSet<>();
-        for (File f : files) {
+        for (File f : result.getFiles()) {
             fileNames.add(f.getName());
         }
 
         Set<String> expectedFileNames = new HashSet<>(Arrays.asList("shapeless_2.13-2.3.3.jar", "scala-library-2.13.0.jar"));
 
+        List<Dependency> expectedDependencies = new ArrayList<>(Arrays.asList(
+                Dependency.of("com.chuusai", "shapeless_2.13", "2.3.3").withConfiguration("default"),
+                Dependency.of("org.scala-lang", "scala-library", "2.13.0").withConfiguration("default")
+        ));
+
         assertEquals(expectedFileNames, fileNames);
+        assertEquals(expectedDependencies, result.getDependencies());
 
     }
 
