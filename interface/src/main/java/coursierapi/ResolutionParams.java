@@ -12,6 +12,7 @@ public class ResolutionParams implements Serializable {
     private final HashSet<Map.Entry<String, String>> exclusions;
     private boolean useSystemOsInfo;
     private boolean useSystemJdkVersion;
+    private String scalaVersion;
 
     private ResolutionParams() {
         maxIterations = null;
@@ -21,6 +22,7 @@ public class ResolutionParams implements Serializable {
         exclusions = new HashSet<>();
         useSystemOsInfo = true;
         useSystemJdkVersion = true;
+        scalaVersion = null;
     }
 
     @Override
@@ -31,14 +33,15 @@ public class ResolutionParams implements Serializable {
                     this.forcedProperties.equals(other.forcedProperties) &&
                     this.profiles.equals(other.profiles) && this.exclusions.equals(other.exclusions) &&
                     Objects.equals(this.useSystemOsInfo, other.useSystemOsInfo) &&
-                    Objects.equals(this.useSystemJdkVersion, other.useSystemJdkVersion);
+                    Objects.equals(this.useSystemJdkVersion, other.useSystemJdkVersion) &&
+                    Objects.equals(this.scalaVersion, other.scalaVersion);
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return 37 * (37 * (37 * (37 * (37 * (37 * (17 + Objects.hashCode(maxIterations)) + forceVersions.hashCode()) + forcedProperties.hashCode()) + profiles.hashCode()) + exclusions.hashCode()) + Boolean.hashCode(useSystemOsInfo)) + Boolean.hashCode(useSystemJdkVersion);
+        return 37 * (37 * (37 * (37 * (37 * (37 * (37 * (17 + Objects.hashCode(maxIterations)) + forceVersions.hashCode()) + forcedProperties.hashCode()) + profiles.hashCode()) + exclusions.hashCode()) + Boolean.hashCode(useSystemOsInfo)) + Boolean.hashCode(useSystemJdkVersion)) + Objects.hashCode(scalaVersion);
     }
 
     @Override
@@ -133,13 +136,13 @@ public class ResolutionParams implements Serializable {
         b.append("useSystemOsInfo=");
         b.append(useSystemOsInfo);
 
-        if (needSep)
-            b.append(", ");
-        else
-            needSep = true;
-
         b.append("useSystemJdkVersion=");
         b.append(useSystemJdkVersion);
+
+        if (scalaVersion != null) {
+            b.append(", scalaVersion=");
+            b.append(scalaVersion);
+        }
 
         b.append(")");
         return b.toString();
@@ -157,7 +160,8 @@ public class ResolutionParams implements Serializable {
                 .withProfiles(params.profiles)
                 .withExclusions(params.exclusions)
                 .withUseSystemOsInfo(params.useSystemOsInfo)
-                .withUseSystemJdkVersion(params.useSystemJdkVersion);
+                .withUseSystemJdkVersion(params.useSystemJdkVersion)
+                .withScalaVersion(params.scalaVersion);
     }
 
     public ResolutionParams withMaxIterations(Integer maxIterations) {
@@ -236,6 +240,11 @@ public class ResolutionParams implements Serializable {
         return this;
     }
 
+    public ResolutionParams withScalaVersion(String scalaVersion) {
+        this.scalaVersion = scalaVersion;
+        return this;
+    }
+
     public Integer getMaxIterations() {
         return maxIterations;
     }
@@ -262,5 +271,9 @@ public class ResolutionParams implements Serializable {
 
     public boolean getUseSystemJdkVersion() {
         return useSystemJdkVersion;
+    }
+
+    public String getScalaVersion() {
+        return scalaVersion;
     }
 }
