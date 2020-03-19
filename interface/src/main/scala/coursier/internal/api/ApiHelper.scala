@@ -187,6 +187,7 @@ object ApiHelper {
       .withExclusions(params.exclusions.map { case (o, n) => new ju.AbstractMap.SimpleEntry(o.value, n.value): ju.Map.Entry[String, String] }.asJava)
       .withUseSystemOsInfo(params.useSystemOsInfo)
       .withUseSystemJdkVersion(params.useSystemJdkVersion)
+      .withScalaVersion(params.scalaVersionOpt.orNull)
   }
 
   def resolutionParams(params: coursierapi.ResolutionParams): ResolutionParams = {
@@ -200,6 +201,7 @@ object ApiHelper {
       .withExclusions(params.getExclusions.asScala.map { e => (Organization(e.getKey), ModuleName(e.getValue)) }.toSet)
       .withUseSystemOsInfo(params.getUseSystemOsInfo)
       .withUseSystemJdkVersion(params.getUseSystemJdkVersion)
+      .withScalaVersionOpt(Option(params.getScalaVersion))
   }
 
   def cache(cache: coursierapi.Cache): FileCache[Task] = {
