@@ -116,7 +116,17 @@ lazy val interface = project
       ProblemFilters.exclude[Problem]("coursierapi.shaded.*"),
     ),
 
-    scalaModuleInfo := None,
+    // clearing scalaModuleInfo in ivyModule, so that evicted doesn't
+    // check scala versions
+    ivyModule := {
+      val is = ivySbt.value
+      val config = moduleSettings.value match {
+        case config0: ModuleDescriptorConfiguration =>
+          config0.withScalaModuleInfo(None)
+	case other => other
+      }
+      new is.Module(config)
+    },
     autoScalaLibrary := false,
     crossVersion := CrossVersion.disabled,
 
