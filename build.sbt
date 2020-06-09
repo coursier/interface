@@ -116,6 +116,7 @@ lazy val interface = project
       ProblemFilters.exclude[Problem]("coursierapi.shaded.*"),
     ),
 
+    scalaModuleInfo := None,
     autoScalaLibrary := false,
     crossVersion := CrossVersion.disabled,
 
