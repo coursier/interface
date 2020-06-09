@@ -19,14 +19,15 @@ object Settings {
   )
 
   private val filterOut = Set("0.0.1")
-  private def no213Versions = (0 to 8).map("0.0." + _).toSet
+  private def no212Versions = (0 to 14).map("0.0." + _).toSet
   def mima(no213: Boolean = false) = Seq(
     MimaPlugin.autoImport.mimaPreviousArtifacts := {
       val sv = scalaVersion.value
+      val is212 = sv.startsWith("2.12.")
       val is213 = sv.startsWith("2.13.")
       Mima.binaryCompatibilityVersions
         .filter(v => !filterOut(v))
-        .filter(v => !is213 || !no213 || !no213Versions(v))
+        .filter(v => (!is213 || !no213) && (!is212 || !no212Versions(v)))
         .map { ver =>
           (organization.value % moduleName.value % ver)
             .cross(crossVersion.value)
