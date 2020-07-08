@@ -17,6 +17,8 @@
 
 Note that all parameters of the inputs and results of these coursier APIs don't necessarily have equivalents in coursier-interface yet.
 
+Beware that unlike their coursier counterparts, which are immutable, some coursier-interface classes may rely on mutation.
+
 Missing features are added when they are needed. PRs adding missing features are welcome, as long as backward binary compatibility is not broken. See [development](#development) for more details about how to proceed.
 
 ## Development
