@@ -55,8 +55,13 @@ lazy val interface = project
           rename("io.github.alexarchambault.windowsansi.**", "coursierapi.shaded.windowsansi.@1"),
         )
 
-        val processor = JJProcessor(rules, true, true)
-        StandaloneJarProcessor.run(orig, tmpDest, processor.proc)
+        val processor = new org.pantsbuild.jarjar.JJProcessor(
+          rules,
+          verbose = false,
+          skipManifest = true,
+          misplacedClassStrategy = "fatal"
+        )
+        StandaloneJarProcessor.run(orig, tmpDest, processor)
 
         ZipUtil.removeFromZip(tmpDest, dest, Set("LICENSE", "NOTICE"))
         tmpDest.delete()

@@ -7,7 +7,7 @@ sbt \
   +evictionCheck \
   +compatibilityCheck \
   'set version in ThisBuild := "'"$TEST_VERSION"'"' \
-  publishLocal 2>&1 | grep -v 'Maybe this is ' | grep -v '^Renamed '
+  publishLocal
 
 # test that things work from JDK 11
 # not actually building things from it, running into weird proguard issues…
