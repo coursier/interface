@@ -3,6 +3,7 @@
 *Zero-dependency Java API for coursier*
 
 [![Build Status](https://travis-ci.org/coursier/interface.svg?branch=master)](https://travis-ci.org/coursier/interface)
+[![Join the chat at https://gitter.im/coursier/coursier](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/coursier/coursier?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Maven Central](https://img.shields.io/maven-central/v/io.get-coursier/interface.svg)](https://maven-badges.herokuapp.com/maven-central/io.get-coursier/interface)
 [![Scaladoc](https://javadoc-badge.appspot.com/io.get-coursier/interface.svg?label=scaladoc)](https://javadoc-badge.appspot.com/io.get-coursier/interface)
 
