@@ -19,6 +19,12 @@ inThisBuild(List(
 
 lazy val finalPackageBin = taskKey[File]("")
 
+val isProguard7OrHigher = Def.setting {
+  val ver = proguardVersion.in(Proguard).value
+  val majorOpt = scala.util.Try(ver.takeWhile(_.isDigit).toInt).toOption
+  majorOpt.exists(_ >= 7)
+}
+
 lazy val interface = project
   .enablePlugins(SbtProguard)
   .settings(
@@ -55,8 +61,13 @@ lazy val interface = project
           rename("io.github.alexarchambault.windowsansi.**", "coursierapi.shaded.windowsansi.@1"),
         )
 
-        val processor = JJProcessor(rules, true, true)
-        StandaloneJarProcessor.run(orig, tmpDest, processor.proc)
+        val processor = new org.pantsbuild.jarjar.JJProcessor(
+          rules,
+          verbose = false,
+          skipManifest = true,
+          misplacedClassStrategy = "fatal"
+        )
+        StandaloneJarProcessor.run(orig, tmpDest, processor)
 
         ZipUtil.removeFromZip(tmpDest, dest, Set("LICENSE", "NOTICE"))
         tmpDest.delete()
@@ -65,7 +76,7 @@ lazy val interface = project
       dest
     },
     addArtifact(artifact.in(Compile, packageBin), finalPackageBin),
-    proguardVersion.in(Proguard) := "6.1.1",
+    proguardVersion.in(Proguard) := "7.0.0",
     proguardOptions.in(Proguard) ++= Seq(
       "-dontnote",
       "-dontwarn",
@@ -74,6 +85,22 @@ lazy val interface = project
       "-keep class coursierapi.** {\n  public protected *;\n}",
     ),
     javaOptions.in(Proguard, proguard) := Seq("-Xmx3172M"),
+    libraryDependencies := {
+      val previous = libraryDependencies.value
+      val ver = proguardVersion.in(Proguard).value
+      if (isProguard7OrHigher.value) {
+        val filteredPrevious = previous
+          .filter(m => (m.organization, m.name) != ("net.sf.proguard", "proguard-base"))
+        filteredPrevious :+ ("com.guardsquare" % "proguard-base" % ver % Proguard)
+      } else
+        previous
+    },
+    resolvers ++= {
+      if (isProguard7OrHigher.value)
+        Seq(Resolver.bintrayRepo("guardsquare", "proguard"))
+      else
+        Nil
+    },
 
     // Adding the interface JAR rather than its classes directory.
     // The former contains META-INF stuff in particular.

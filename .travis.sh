@@ -7,19 +7,27 @@ sbt \
   +evictionCheck \
   +compatibilityCheck \
   'set version in ThisBuild := "'"$TEST_VERSION"'"' \
-  publishLocal 2>&1 | grep -v 'Maybe this is ' | grep -v '^Renamed '
+  publishLocal
 
 # test that things work from JDK 11
 # not actually building things from it, running into weird proguard issues…
 
-# inspired by http://eed3si9n.com/all-your-jdks-on-travis-ci-using-jabba
-TEST_JDK="openjdk@1.11.0-2"
-export JABBA_HOME="$HOME/.jabba"
-curl -sL https://raw.githubusercontent.com/shyiko/jabba/0.11.2/install.sh | bash
-source "$HOME/.jabba/jabba.sh"
-"$JABBA_HOME/bin/jabba" install "$TEST_JDK"
-export JAVA_HOME="$JABBA_HOME/jdk/$TEST_JDK"
-export PATH="$JAVA_HOME/bin:$PATH"
+CS_VERSION="2.0.0-RC6-21"
+
+DIR="$HOME/.cache/coursier/launchers/$CS_VERSION"
+
+CS="$DIR/cs"
+if [ ! -x "$CS" ]; then
+  DIR="$(dirname "$CS")"
+  rm -rf "$DIR" # remove any former launcher
+  mkdir -p "$DIR"
+  curl -Lo "$CS" "https://github.com/coursier/coursier/releases/download/v$CS_VERSION/cs-x86_64-pc-linux"
+  chmod +x "$CS"
+fi
+
+TEST_JDK="adopt:1.11.0-7"
+eval "$("$CS" java --jvm "$TEST_JDK" --env)"
+
 java -Xmx32m -version
 
 export TEST_VERSION
