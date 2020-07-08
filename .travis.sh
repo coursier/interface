@@ -14,12 +14,13 @@ sbt \
 
 CS_VERSION="2.0.0-RC6-21"
 
-DIR="$HOME/.cache/coursier/launchers/$CS_VERSION"
+LAUNCHERS_DIR="$HOME/.cache/coursier/launchers"
 
-CS="$DIR/cs"
+CS="$LAUNCHERS_DIR/$CS_VERSION/cs"
 if [ ! -x "$CS" ]; then
+  rm -rf "$LAUNCHERS_DIR" # remove any former launcher
+
   DIR="$(dirname "$CS")"
-  rm -rf "$DIR" # remove any former launcher
   mkdir -p "$DIR"
   curl -Lo "$CS" "https://github.com/coursier/coursier/releases/download/v$CS_VERSION/cs-x86_64-pc-linux"
   chmod +x "$CS"
