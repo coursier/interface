@@ -19,12 +19,6 @@ inThisBuild(List(
 
 lazy val finalPackageBin = taskKey[File]("")
 
-val isProguard7OrHigher = Def.setting {
-  val ver = proguardVersion.in(Proguard).value
-  val majorOpt = scala.util.Try(ver.takeWhile(_.isDigit).toInt).toOption
-  majorOpt.exists(_ >= 7)
-}
-
 lazy val interface = project
   .enablePlugins(SbtProguard)
   .settings(
@@ -85,22 +79,6 @@ lazy val interface = project
       "-keep class coursierapi.** {\n  public protected *;\n}",
     ),
     javaOptions.in(Proguard, proguard) := Seq("-Xmx3172M"),
-    libraryDependencies := {
-      val previous = libraryDependencies.value
-      val ver = proguardVersion.in(Proguard).value
-      if (isProguard7OrHigher.value) {
-        val filteredPrevious = previous
-          .filter(m => (m.organization, m.name) != ("net.sf.proguard", "proguard-base"))
-        filteredPrevious :+ ("com.guardsquare" % "proguard-base" % ver % Proguard)
-      } else
-        previous
-    },
-    resolvers ++= {
-      if (isProguard7OrHigher.value)
-        Seq(Resolver.bintrayRepo("guardsquare", "proguard"))
-      else
-        Nil
-    },
 
     // Adding the interface JAR rather than its classes directory.
     // The former contains META-INF stuff in particular.
