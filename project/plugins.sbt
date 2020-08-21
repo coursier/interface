@@ -6,4 +6,4 @@ addSbtPlugin("com.lightbend.sbt" % "sbt-proguard" % "0.4.0")
 
 resolvers += Resolver.sonatypeRepo("snapshots")
 
-libraryDependencies += "com.eed3si9n.jarjarabrams" %% "jarjar-abrams-core" % "0.2.0"
+libraryDependencies += "com.eed3si9n.jarjarabrams" %% "jarjar-abrams-core" % "0.3.0"
