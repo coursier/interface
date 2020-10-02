@@ -5,7 +5,7 @@ TEST_VERSION="0.1.0-test"
 sbt \
   +test \
   +evictionCheck \
-  +compatibilityCheck \
+  +mimaReportBinaryIssues \
   'set version in ThisBuild := "'"$TEST_VERSION"'"' \
   publishLocal
 
