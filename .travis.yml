@@ -4,7 +4,7 @@ git:
   depth: false
 before_install:
   - mkdir .bin
-  - curl -Lo .bin/sbt https://raw.githubusercontent.com/coursier/sbt-extras/36eba4ce871ea49e6ee1164e8694fc305a680880/sbt
+  - curl -Lo .bin/sbt https://github.com/coursier/sbt-extras/raw/e60d803942efc3bcef877aa50b3c0917a93b4042/sbt
   - chmod +x .bin/sbt
   - export PATH="$(pwd)/.bin:$PATH"
 cache:
