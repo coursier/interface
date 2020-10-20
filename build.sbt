@@ -85,6 +85,9 @@ lazy val interface = project
     proguardInputs.in(Proguard) := proguardInputs.in(Proguard).value.filter(f => !f.isDirectory || f.getName != "classes"),
     proguardInputs.in(Proguard) += packageBin.in(Compile).value,
 
+    proguardBinaryDeps.in(Proguard) := Settings.getAllBinaryDeps.value,
+    proguardBinaryDeps.in(Proguard) ++= Settings.rtJarOpt.toSeq, // seems needed with sbt 1.4.0
+
     proguardInputFilter.in(Proguard) := { file =>
       file.name match {
         case n if n.startsWith("interface") => None // keep META-INF from main JAR
