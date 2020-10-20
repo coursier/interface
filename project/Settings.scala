@@ -35,4 +35,22 @@ object Settings {
     }
   )
 
+  // https://github.com/sbt/sbt-proguard/blob/2c502f961245a18677ef2af4220a39e7edf2f996/src/main/scala-sbt-1.0/com/typesafe/sbt/proguard/Sbt10Compat.scala#L8-L13
+  // but sbt 1.4-compatible
+  val getAllBinaryDeps: Def.Initialize[Task[Seq[java.io.File]]] = Def.task {
+    import sbt.internal.inc.Analysis
+    val converter = fileConverter.value
+    compile.in(Compile).value match {
+      case analysis: Analysis =>
+        analysis.relations.allLibraryDeps.toSeq.map(converter.toPath(_).toFile)
+    }
+  }
+
+  lazy val rtJarOpt = sys.props.get("sun.boot.class.path")
+    .toSeq
+    .flatMap(_.split(java.io.File.pathSeparator).toSeq)
+    .map(java.nio.file.Paths.get(_))
+    .find(_.endsWith("rt.jar"))
+    .map(_.toFile)
+
 }
