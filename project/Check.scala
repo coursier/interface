@@ -12,7 +12,8 @@ object Check {
       .map(_.getName)
       .filter { n =>
         !n.startsWith("META-INF/") && !n.startsWith(ns + "/") &&
-          n != "reflect.properties" // scala-reflect adds that
+          n != "reflect.properties" && // scala-reflect adds that
+          n != "scala-collection-compat.properties" // collection-compat adds that
       }
       .toVector
       .sorted
