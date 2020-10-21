@@ -114,7 +114,7 @@ lazy val interface = project
 
     Settings.shared,
     Settings.mima(),
-    libraryDependencies += "io.get-coursier" %% "coursier" % "2.0.3",
+    libraryDependencies += "io.get-coursier" %% "coursier" % "2.0.4",
 
     libraryDependencies += "com.lihaoyi" %% "utest" % "0.7.5" % Test,
     testFrameworks += new TestFramework("utest.runner.Framework"),
