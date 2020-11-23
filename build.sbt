@@ -53,6 +53,7 @@ lazy val interface = project
           rename("coursier.**", "coursierapi.shaded.coursier.@1"),
           rename("org.fusesource.**", "coursierapi.shaded.org.fusesource.@1"),
           rename("io.github.alexarchambault.windowsansi.**", "coursierapi.shaded.windowsansi.@1"),
+          rename("concurrentrefhashmap.**", "coursierapi.shaded.concurrentrefhashmap.@1"),
         )
 
         val processor = new org.pantsbuild.jarjar.JJProcessor(
@@ -114,7 +115,7 @@ lazy val interface = project
 
     Settings.shared,
     Settings.mima(),
-    libraryDependencies += "io.get-coursier" %% "coursier" % "2.0.6",
+    libraryDependencies += "io.get-coursier" %% "coursier" % "2.0.7",
 
     libraryDependencies += "com.lihaoyi" %% "utest" % "0.7.5" % Test,
     testFrameworks += new TestFramework("utest.runner.Framework"),
