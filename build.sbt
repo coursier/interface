@@ -53,6 +53,7 @@ lazy val interface = project
           rename("coursier.**", "coursierapi.shaded.coursier.@1"),
           rename("org.fusesource.**", "coursierapi.shaded.org.fusesource.@1"),
           rename("io.github.alexarchambault.windowsansi.**", "coursierapi.shaded.windowsansi.@1"),
+          rename("concurrentrefhashmap.**", "coursierapi.shaded.concurrentrefhashmap.@1"),
         )
 
         val processor = new org.pantsbuild.jarjar.JJProcessor(
