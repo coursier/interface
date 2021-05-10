@@ -1,0 +1,44 @@
+name: CI
+on:
+  push:
+    branches:
+    - master
+    tags:
+    - "v*"
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: coursier/cache-action@v6
+    - uses: laughedelic/coursier-setup@v1
+      with:
+        jvm: 8
+        apps: sbt-launcher
+    - name: Test
+      run: ./.github/scripts/ci.sh
+
+  publish:
+    needs: test
+    if: github.event_name == 'push'
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: coursier/cache-action@v6
+    - uses: laughedelic/coursier-setup@v1
+      with:
+        jvm: 8
+        apps: sbt-launcher
+    - run: .github/scripts/gpg-setup.sh
+      shell: bash
+      env:
+        PGP_SECRET: ${{ secrets.PGP_SECRET }}
+    - name: Release
+      run: sbt ci-release
+      env:
+        PGP_SECRET: ${{ secrets.PGP_SECRET }}
+        PGP_PASSWORD: ${{ secrets.PGP_PASSPHRASE }}
+        SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+        SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
