@@ -160,7 +160,7 @@ lazy val `interface-svm-subs` = project
   .dependsOn(interface)
   .settings(
     Settings.shared,
-    libraryDependencies += "org.graalvm.nativeimage" % "svm" % "20.3.1.2" % Provided
+    libraryDependencies += "org.graalvm.nativeimage" % "svm" % "20.3.2" % Provided
   )
 
 lazy val interpolators = project
