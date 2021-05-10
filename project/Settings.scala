@@ -15,7 +15,8 @@ object Settings {
     javacOptions ++= Seq(
       "-source", "1.8",
       "-target", "1.8"
-    )
+    ),
+    Compile / doc / javacOptions := Seq("-source", "1.8")
   )
 
   private val filterOut = Set("0.0.1")
