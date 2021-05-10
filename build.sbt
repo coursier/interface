@@ -155,6 +155,14 @@ lazy val interface = project
 
   )
 
+lazy val `interface-svm-subs` = project
+  .disablePlugins(MimaPlugin)
+  .dependsOn(interface)
+  .settings(
+    Settings.shared,
+    libraryDependencies += "org.graalvm.nativeimage" % "svm" % "20.3.1.2" % Provided
+  )
+
 lazy val interpolators = project
   .dependsOn(interface)
   .settings(
