@@ -5,7 +5,7 @@ import sbt.Keys._
 
 object Settings {
 
-  def scala213 = "2.13.5"
+  def scala213 = "2.13.6"
   def scala212 = "2.12.13"
 
   lazy val shared = Seq(
