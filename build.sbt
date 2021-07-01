@@ -3,6 +3,8 @@ import com.typesafe.tools.mima.core.{MissingClassProblem, Problem, ProblemFilter
 import scala.xml.{Node => XmlNode, _}
 import scala.xml.transform.{RewriteRule, RuleTransformer}
 
+resolvers in ThisBuild += Resolver.jcenterRepo
+
 inThisBuild(List(
   organization := "io.get-coursier",
   homepage := Some(url("https://github.com/coursier/interface")),
@@ -78,6 +80,8 @@ lazy val interface = project
       "-dontobfuscate",
       "-dontoptimize",
       "-keep class coursierapi.** {\n  public protected *;\n}",
+      // tmp
+      // "-libraryjars /path/to/jmods/java.base.jmod"
     ),
     javaOptions.in(Proguard, proguard) := Seq("-Xmx3172M"),
 
@@ -193,8 +197,9 @@ lazy val `interface-test` = project
     autoScalaLibrary := false,
     crossVersion := CrossVersion.disabled,
     libraryDependencies ++= Seq(
-      "junit" % "junit" % "4.13.2" % Test,
-      "com.novocode" % "junit-interface" % "0.11" % Test
+      "org.junit.jupiter" % "junit-jupiter" % "5.7.0" % Test,
+      "org.junit.jupiter" % "junit-jupiter-api" % "5.7.0" % Test,
+      "net.aichler" % "jupiter-interface" % JupiterKeys.jupiterVersion.value % Test
     ),
     libraryDependencies ++= {
       val org = organization.in(interface).value

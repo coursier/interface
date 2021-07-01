@@ -4,6 +4,11 @@ addSbtPlugin("io.github.alexarchambault.sbt" % "sbt-eviction-rules" % "0.2.0")
 addSbtPlugin("com.github.alexarchambault.tmp" % "sbt-mima-plugin" % "0.7.1-SNAPSHOT")
 addSbtPlugin("com.lightbend.sbt" % "sbt-proguard" % "0.4.0")
 
+resolvers += Resolver.jcenterRepo
+
+addSbtPlugin("net.aichler" % "sbt-jupiter-interface" % "0.8.4")
+
+
 resolvers += Resolver.sonatypeRepo("snapshots")
 
 libraryDependencies += "com.eed3si9n.jarjarabrams" %% "jarjar-abrams-core" % "0.3.0"
