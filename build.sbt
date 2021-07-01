@@ -186,7 +186,7 @@ lazy val interpolators = project
       ProblemFilters.exclude[MissingClassProblem]("coursierapi.Interpolators$Macros$"),
     )
   )
-
+// to run tests locally, you must set a TEST_VERSION environment variable.
 lazy val `interface-test` = project
   .disablePlugins(MimaPlugin)
   .dependsOn(interface)
@@ -214,7 +214,11 @@ lazy val `interface-test` = project
 	}
       else
         Def.task(Seq.empty[File])
-    }.value
+    }.value,
+    // suppress eviction check warning
+    dependencyOverrides ++= Seq(
+      "org.scala-lang" % "scala-library" % scalaVersion.value,
+      )
   )
 
 skip.in(publish) := true

@@ -36,7 +36,13 @@ jobs:
         publishLocal
     - name: Test on java 11
       if: matrix.java == 11
-      run: sbt test
+      run: > 
+        sbt 
+        +test
+        +evictionCheck
+        +mimaReportBinaryIssues
+        'set version in ThisBuild := "'"${{ env.TEST_VERSION }}"'"'
+        publishLocal
 
   publish:
     needs: test
