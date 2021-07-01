@@ -72,13 +72,26 @@ lazy val interface = project
     },
     addArtifact(artifact.in(Compile, packageBin), finalPackageBin),
     proguardVersion.in(Proguard) := "7.1.1",
-    proguardOptions.in(Proguard) ++= Seq(
-      "-dontnote",
-      "-dontwarn",
-      "-dontobfuscate",
-      "-dontoptimize",
-      "-keep class coursierapi.** {\n  public protected *;\n}",
-    ),
+    proguardOptions.in(Proguard) ++= {
+      val baseOptions = Seq(
+        "-dontnote",
+        "-dontwarn",
+        "-dontobfuscate",
+        "-dontoptimize",
+        "-keep class coursierapi.** {\n  public protected *;\n}"
+      )
+
+      val isJava9OrMore = sys.props.get("java.version").exists(!_.startsWith("1."))
+      val maybeJava9Options =
+        if (isJava9OrMore) {
+          val javaHome = sys.props.getOrElse("java.home", ???)
+          Seq(s"-libraryjars $javaHome/jmods/java.base.jmod")
+        }
+        else
+          Nil
+
+      baseOptions ++ maybeJava9Options
+    },
     javaOptions.in(Proguard, proguard) := Seq("-Xmx3172M"),
 
     // Adding the interface JAR rather than its classes directory.
