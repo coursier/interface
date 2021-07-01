@@ -10,6 +10,11 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env: 
+      TEST_VERSION: "0.1.0-test"
+    strategy:
+      matrix:
+        java: [8,11]
     steps:
     - uses: actions/checkout@v2
       with:
@@ -18,10 +23,20 @@ jobs:
     - uses: coursier/cache-action@v6
     - uses: laughedelic/coursier-setup@v1
       with:
-        jvm: 8
+        jvm: ${{ matrix.java }}
         apps: sbt-launcher
-    - name: Test
-      run: ./.github/scripts/ci.sh
+    - name: Test on java 8
+      if: matrix.java == 8
+      run: >
+        sbt 
+        +test
+        +evictionCheck
+        +mimaReportBinaryIssues
+        'set version in ThisBuild := "'"${{ env.TEST_VERSION }}"'"'
+        publishLocal
+    - name: Test on java 11
+      if: matrix.java == 11
+      run: sbt test
 
   publish:
     needs: test
