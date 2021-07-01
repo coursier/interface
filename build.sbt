@@ -73,15 +73,14 @@ lazy val interface = project
       dest
     },
     addArtifact(artifact.in(Compile, packageBin), finalPackageBin),
-    proguardVersion.in(Proguard) := "7.1.0-beta3",
+    proguardVersion.in(Proguard) := "7.1.0",
     proguardOptions.in(Proguard) ++= Seq(
       "-dontnote",
       "-dontwarn",
       "-dontobfuscate",
       "-dontoptimize",
       "-keep class coursierapi.** {\n  public protected *;\n}",
-      // tmp
-      // "-libraryjars /path/to/jmods/java.base.jmod"
+      s"-libraryjars ${sys.env("JAVA_HOME")}/jmods/java.base.jmod"
     ),
     javaOptions.in(Proguard, proguard) := Seq("-Xmx3172M"),
 
@@ -119,7 +118,7 @@ lazy val interface = project
 
     Settings.shared,
     Settings.mima(),
-    libraryDependencies += "io.get-coursier" %% "coursier" % "2.0.15",
+    libraryDependencies += "io.get-coursier" %% "coursier" % "2.0.16",
 
     libraryDependencies += "com.lihaoyi" %% "utest" % "0.7.7" % Test,
     testFrameworks += new TestFramework("utest.runner.Framework"),
@@ -190,7 +189,7 @@ lazy val interpolators = project
 
 lazy val `interface-test` = project
   .disablePlugins(MimaPlugin)
-  // .dependsOn(interface)
+  .dependsOn(interface)
   .settings(
     Settings.shared,
     skip.in(publish) := true,
