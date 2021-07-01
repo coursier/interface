@@ -79,9 +79,10 @@ lazy val interface = project
       "-dontwarn",
       "-dontobfuscate",
       "-dontoptimize",
-      "-keep class coursierapi.** {\n  public protected *;\n}",
-      s"-libraryjars ${sys.env("JAVA_HOME")}/jmods/java.base.jmod"
-    ),
+      "-keep class coursierapi.** {\n  public protected *;\n}"
+    ) ++ sys.env.get("JAVA_11_COMPAT")
+      .map(_=>s"-libraryjars ${sys.env("JAVA_HOME")}/jmods/java.base.jmod")
+      .toSeq,
     javaOptions.in(Proguard, proguard) := Seq("-Xmx3172M"),
 
     // Adding the interface JAR rather than its classes directory.
@@ -200,13 +201,6 @@ lazy val `interface-test` = project
       "org.junit.jupiter" % "junit-jupiter-api" % "5.7.0" % Test,
       "net.aichler" % "jupiter-interface" % JupiterKeys.jupiterVersion.value % Test
     ),
-    libraryDependencies ++= {
-      val org = organization.in(interface).value
-      val name = moduleName.in(interface).value
-      sys.env.get("TEST_VERSION").toSeq.map { v =>
-        org % name % v
-      }
-    },
     unmanagedClasspath.in(Test) ++= Def.taskDyn {
       if (sys.env.get("TEST_VERSION").isEmpty)
         Def.task {
@@ -218,7 +212,7 @@ lazy val `interface-test` = project
     // suppress eviction check warning
     dependencyOverrides ++= Seq(
       "org.scala-lang" % "scala-library" % scalaVersion.value,
-      )
+    )
   )
 
 skip.in(publish) := true
