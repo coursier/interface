@@ -3,8 +3,8 @@ package coursierapi.test;
 import coursierapi.Complete;
 import coursierapi.CompleteResult;
 import coursierapi.error.CoursierError;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.*;
 

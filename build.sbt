@@ -3,6 +3,8 @@ import com.typesafe.tools.mima.core.{MissingClassProblem, Problem, ProblemFilter
 import scala.xml.{Node => XmlNode, _}
 import scala.xml.transform.{RewriteRule, RuleTransformer}
 
+resolvers in ThisBuild += Resolver.jcenterRepo
+
 inThisBuild(List(
   organization := "io.get-coursier",
   homepage := Some(url("https://github.com/coursier/interface")),
@@ -71,14 +73,16 @@ lazy val interface = project
       dest
     },
     addArtifact(artifact.in(Compile, packageBin), finalPackageBin),
-    proguardVersion.in(Proguard) := "7.1.0-beta3",
+    proguardVersion.in(Proguard) := "7.1.0",
     proguardOptions.in(Proguard) ++= Seq(
       "-dontnote",
       "-dontwarn",
       "-dontobfuscate",
       "-dontoptimize",
-      "-keep class coursierapi.** {\n  public protected *;\n}",
-    ),
+      "-keep class coursierapi.** {\n  public protected *;\n}"
+    ) ++ sys.env.get("JAVA_11_COMPAT")
+      .map(_=>s"-libraryjars ${sys.env("JAVA_HOME")}/jmods/java.base.jmod")
+      .toSeq,
     javaOptions.in(Proguard, proguard) := Seq("-Xmx3172M"),
 
     // Adding the interface JAR rather than its classes directory.
@@ -115,7 +119,7 @@ lazy val interface = project
 
     Settings.shared,
     Settings.mima(),
-    libraryDependencies += "io.get-coursier" %% "coursier" % "2.0.15",
+    libraryDependencies += "io.get-coursier" %% "coursier" % "2.0.16",
 
     libraryDependencies += "com.lihaoyi" %% "utest" % "0.7.7" % Test,
     testFrameworks += new TestFramework("utest.runner.Framework"),
@@ -183,26 +187,20 @@ lazy val interpolators = project
       ProblemFilters.exclude[MissingClassProblem]("coursierapi.Interpolators$Macros$"),
     )
   )
-
+// to run tests locally, you must set a TEST_VERSION environment variable.
 lazy val `interface-test` = project
   .disablePlugins(MimaPlugin)
-  // .dependsOn(interface)
+  .dependsOn(interface)
   .settings(
     Settings.shared,
     skip.in(publish) := true,
     autoScalaLibrary := false,
     crossVersion := CrossVersion.disabled,
     libraryDependencies ++= Seq(
-      "junit" % "junit" % "4.13.2" % Test,
-      "com.novocode" % "junit-interface" % "0.11" % Test
+      "org.junit.jupiter" % "junit-jupiter" % "5.7.0" % Test,
+      "org.junit.jupiter" % "junit-jupiter-api" % "5.7.0" % Test,
+      "net.aichler" % "jupiter-interface" % JupiterKeys.jupiterVersion.value % Test
     ),
-    libraryDependencies ++= {
-      val org = organization.in(interface).value
-      val name = moduleName.in(interface).value
-      sys.env.get("TEST_VERSION").toSeq.map { v =>
-        org % name % v
-      }
-    },
     unmanagedClasspath.in(Test) ++= Def.taskDyn {
       if (sys.env.get("TEST_VERSION").isEmpty)
         Def.task {
@@ -210,7 +208,11 @@ lazy val `interface-test` = project
 	}
       else
         Def.task(Seq.empty[File])
-    }.value
+    }.value,
+    // suppress eviction check warning
+    dependencyOverrides ++= Seq(
+      "org.scala-lang" % "scala-library" % scalaVersion.value,
+    )
   )
 
 skip.in(publish) := true

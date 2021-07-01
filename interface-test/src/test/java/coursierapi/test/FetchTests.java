@@ -4,8 +4,8 @@ import coursierapi.Dependency;
 import coursierapi.Fetch;
 import coursierapi.FetchResult;
 import coursierapi.error.CoursierError;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.File;
 import java.util.*;
