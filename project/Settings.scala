@@ -6,7 +6,7 @@ import sbt.Keys._
 object Settings {
 
   def scala213 = "2.13.5"
-  def scala212 = "2.12.12"
+  def scala212 = "2.12.15"
 
   lazy val shared = Seq(
     scalaVersion := scala213,
@@ -15,7 +15,8 @@ object Settings {
     javacOptions ++= Seq(
       "-source", "1.8",
       "-target", "1.8"
-    )
+    ),
+    Compile / doc / javacOptions := Seq("-source", "1.8")
   )
 
   private val filterOut = Set("0.0.1")

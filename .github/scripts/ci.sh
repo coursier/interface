@@ -12,10 +12,8 @@ sbt \
 # test that things work from JDK 11
 # not actually building things from it, running into weird proguard issues…
 
-./.cs-setup.sh
-
 TEST_JDK="adopt:1.11.0-7"
-eval "$(./cs java --jvm "$TEST_JDK" --env)"
+eval "$(cs java --jvm "$TEST_JDK" --env)"
 
 java -Xmx32m -version
 
