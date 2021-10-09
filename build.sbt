@@ -71,7 +71,7 @@ lazy val interface = project
       dest
     },
     addArtifact(artifact.in(Compile, packageBin), finalPackageBin),
-    proguardVersion.in(Proguard) := "7.1.0-beta3",
+    proguardVersion.in(Proguard) := "7.1.1",
     proguardOptions.in(Proguard) ++= Seq(
       "-dontnote",
       "-dontwarn",
@@ -160,7 +160,7 @@ lazy val `interface-svm-subs` = project
   .dependsOn(interface)
   .settings(
     Settings.shared,
-    libraryDependencies += "org.graalvm.nativeimage" % "svm" % "20.3.1.2" % Provided,
+    libraryDependencies += "org.graalvm.nativeimage" % "svm" % "20.3.3" % Provided,
     autoScalaLibrary := false,
     crossVersion := CrossVersion.disabled,
     // we don't actually depend on that thanks to proguarding / shading in interface
