@@ -35,7 +35,7 @@ lazy val interface = project
       import org.pantsbuild.jarjar._
       import org.pantsbuild.jarjar.util.StandaloneJarProcessor
 
-      val orig = proguard.in(Proguard).value.head
+      val orig = (Proguard / proguard).value.head
       val origLastModified = orig.lastModified()
       val dest = orig.getParentFile / s"${orig.getName.stripSuffix(".jar")}-with-renaming-test.jar"
       if (!dest.exists() || dest.lastModified() < origLastModified) {
@@ -70,9 +70,9 @@ lazy val interface = project
       Check.onlyNamespace("coursierapi", dest)
       dest
     },
-    addArtifact(artifact.in(Compile, packageBin), finalPackageBin),
-    proguardVersion.in(Proguard) := "7.1.1",
-    proguardOptions.in(Proguard) ++= {
+    addArtifact((Compile / packageBin / artifact), finalPackageBin),
+    (Proguard / proguardVersion) := "7.1.1",
+    (Proguard / proguardOptions) ++= {
       val baseOptions = Seq(
         "-dontnote",
         "-dontwarn",
@@ -92,17 +92,17 @@ lazy val interface = project
 
       baseOptions ++ maybeJava9Options
     },
-    javaOptions.in(Proguard, proguard) := Seq("-Xmx3172M"),
+    (Proguard / proguard / javaOptions) := Seq("-Xmx3172M"),
 
     // Adding the interface JAR rather than its classes directory.
     // The former contains META-INF stuff in particular.
-    proguardInputs.in(Proguard) := proguardInputs.in(Proguard).value.filter(f => !f.isDirectory || f.getName != "classes"),
-    proguardInputs.in(Proguard) += packageBin.in(Compile).value,
+    (Proguard / proguardInputs) := (Proguard / proguardInputs).value.filter(f => !f.isDirectory || f.getName != "classes"),
+    (Proguard / proguardInputs) += (Compile / packageBin).value,
 
-    proguardBinaryDeps.in(Proguard) := Settings.getAllBinaryDeps.value,
-    proguardBinaryDeps.in(Proguard) ++= Settings.rtJarOpt.toSeq, // seems needed with sbt 1.4.0
+    (Proguard / proguardBinaryDeps) := Settings.getAllBinaryDeps.value,
+    (Proguard / proguardBinaryDeps) ++= Settings.rtJarOpt.toSeq, // seems needed with sbt 1.4.0
 
-    proguardInputFilter.in(Proguard) := { file =>
+    (Proguard / proguardInputFilter) := { file =>
       file.name match {
         case n if n.startsWith("interface") => None // keep META-INF from main JAR
         case n if n.startsWith("coursier-core") => Some("!META-INF/**,!coursier.properties,!coursier/coursier.properties")
@@ -202,7 +202,7 @@ lazy val `interface-test` = project
   // .dependsOn(interface)
   .settings(
     Settings.shared,
-    skip.in(publish) := true,
+    (publish / skip) := true,
     autoScalaLibrary := false,
     crossVersion := CrossVersion.disabled,
     libraryDependencies ++= Seq(
@@ -210,21 +210,21 @@ lazy val `interface-test` = project
       "com.novocode" % "junit-interface" % "0.11" % Test
     ),
     libraryDependencies ++= {
-      val org = organization.in(interface).value
-      val name = moduleName.in(interface).value
+      val org = (interface / organization).value
+      val name = (interface / moduleName).value
       sys.env.get("TEST_VERSION").toSeq.map { v =>
         org % name % v
       }
     },
-    unmanagedClasspath.in(Test) ++= Def.taskDyn {
+    (Test / unmanagedClasspath) ++= Def.taskDyn {
       if (sys.env.get("TEST_VERSION").isEmpty)
         Def.task {
-          Seq(finalPackageBin.in(interface).value)
+          Seq((interface / finalPackageBin).value)
 	}
       else
         Def.task(Seq.empty[File])
     }.value
   )
 
-skip.in(publish) := true
+(publish / skip) := true
 disablePlugins(MimaPlugin)
