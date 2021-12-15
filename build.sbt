@@ -54,6 +54,7 @@ lazy val interface = project
           rename("org.fusesource.**", "coursierapi.shaded.org.fusesource.@1"),
           rename("io.github.alexarchambault.windowsansi.**", "coursierapi.shaded.windowsansi.@1"),
           rename("concurrentrefhashmap.**", "coursierapi.shaded.concurrentrefhashmap.@1"),
+          rename("org.codehaus.plexus.util.**", "coursierapi.shaded.plexusutil.@1")
         )
 
         val processor = new org.pantsbuild.jarjar.JJProcessor(
@@ -64,7 +65,24 @@ lazy val interface = project
         )
         StandaloneJarProcessor.run(orig, tmpDest, processor)
 
-        ZipUtil.removeFromZip(tmpDest, dest, Set("LICENSE", "NOTICE"))
+        val toBeRemoved = Set(
+          "LICENSE",
+          "NOTICE",
+          "README"
+        )
+        val directoriesToBeRemoved = Seq(
+          "licenses/"
+        )
+        assert(directoriesToBeRemoved.forall(_.endsWith("/")))
+        ZipUtil.removeFromZip(
+          tmpDest,
+          dest,
+          name =>
+            toBeRemoved(name) || directoriesToBeRemoved.exists(dir =>
+              name.startsWith(dir)
+            )
+        )
+
         tmpDest.delete()
       }
       Check.onlyNamespace("coursierapi", dest)
@@ -128,7 +146,7 @@ lazy val interface = project
 
     Settings.shared,
     Settings.mima(),
-    libraryDependencies += "io.get-coursier" %% "coursier" % "2.0.16",
+    libraryDependencies += "io.get-coursier" %% "coursier" % "2.1.0-M2",
 
     libraryDependencies += "com.lihaoyi" %% "utest" % "0.7.10" % Test,
     testFrameworks += new TestFramework("utest.runner.Framework"),
