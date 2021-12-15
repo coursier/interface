@@ -32,8 +32,8 @@ lazy val interface = project
         former + "-scala-" + sbv + "-shaded"
     },
     finalPackageBin := {
-      import org.pantsbuild.jarjar._
-      import org.pantsbuild.jarjar.util.StandaloneJarProcessor
+      import com.eed3si9n.jarjar._
+      import com.eed3si9n.jarjar.util.StandaloneJarProcessor
 
       val orig = (Proguard / proguard).value.head
       val origLastModified = orig.lastModified()
@@ -57,7 +57,7 @@ lazy val interface = project
           rename("org.codehaus.plexus.util.**", "coursierapi.shaded.plexusutil.@1")
         )
 
-        val processor = new org.pantsbuild.jarjar.JJProcessor(
+        val processor = new com.eed3si9n.jarjar.JJProcessor(
           rules,
           verbose = false,
           skipManifest = true,
