@@ -41,7 +41,7 @@ object Settings {
   val getAllBinaryDeps: Def.Initialize[Task[Seq[java.io.File]]] = Def.task {
     import sbt.internal.inc.Analysis
     val converter = fileConverter.value
-    compile.in(Compile).value match {
+    (Compile / compile).value match {
       case analysis: Analysis =>
         analysis.relations.allLibraryDeps.toSeq.map(converter.toPath(_).toFile)
     }

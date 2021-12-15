@@ -4,7 +4,7 @@ import java.io.{ByteArrayOutputStream, File, FileInputStream, FileOutputStream, 
 
 object ZipUtil {
 
-  def removeFromZip(sourceZip: File, destZip: File, remove: Set[String]): Unit = {
+  def removeFromZip(sourceZip: File, destZip: File, remove: String => Boolean): Unit = {
 
     val is = new FileInputStream(sourceZip)
     val os = new FileOutputStream(destZip)
