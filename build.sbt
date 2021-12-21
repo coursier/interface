@@ -40,6 +40,7 @@ lazy val interface = project
       val dest = orig.getParentFile / s"${orig.getName.stripSuffix(".jar")}-with-renaming-test.jar"
       if (!dest.exists() || dest.lastModified() < origLastModified) {
         val tmpDest = orig.getParentFile / s"${orig.getName.stripSuffix(".jar")}-with-renaming-test-0.jar"
+        val tmpDest1 = orig.getParentFile / s"${orig.getName.stripSuffix(".jar")}-with-renaming-test-1.jar"
 
         def rename(from: String, to: String): Rule = {
           val rule = new Rule
@@ -76,14 +77,28 @@ lazy val interface = project
         assert(directoriesToBeRemoved.forall(_.endsWith("/")))
         ZipUtil.removeFromZip(
           tmpDest,
-          dest,
+          tmpDest1,
           name =>
             toBeRemoved(name) || directoriesToBeRemoved.exists(dir =>
               name.startsWith(dir)
             )
         )
-
         tmpDest.delete()
+
+        val serviceContent =
+          ZipUtil.zipEntryContent(orig, "META-INF/services/coursier.jniutils.NativeApi").getOrElse {
+            sys.error(s"META-INF/services/coursier.jniutils.NativeApi not found in $orig")
+          }
+
+        ZipUtil.addToZip(
+          tmpDest1,
+          dest,
+          Seq(
+            "META-INF/services/coursierapi.shaded.coursier.jniutils.NativeApi" -> serviceContent
+          )
+        )
+
+        tmpDest1.delete()
       }
       Check.onlyNamespace("coursierapi", dest)
       dest
@@ -123,6 +138,7 @@ lazy val interface = project
     Proguard / proguardInputFilter := { file =>
       file.name match {
         case n if n.startsWith("interface") => None // keep META-INF from main JAR
+        case n if n.startsWith("windows-jni-utils") => Some("!META-INF/MANIFEST.MF")
         case n if n.startsWith("coursier-core") => Some("!META-INF/**,!coursier.properties,!coursier/coursier.properties")
         case n if n.startsWith("scala-xml") => Some("!META-INF/**,!scala-xml.properties")
         case n if n.startsWith("scala-library") => Some("!META-INF/**,!library.properties,!rootdoc.txt")
@@ -146,7 +162,10 @@ lazy val interface = project
 
     Settings.shared,
     Settings.mima(),
-    libraryDependencies += "io.get-coursier" %% "coursier" % "2.1.0-M2-1",
+    libraryDependencies ++= Seq(
+      "io.get-coursier" %% "coursier" % "2.1.0-M2-1",
+      "io.get-coursier.jniutils" % "windows-jni-utils-coursierapi" % "0.3.2"
+    ),
 
     libraryDependencies += "com.lihaoyi" %% "utest" % "0.7.10" % Test,
     testFrameworks += new TestFramework("utest.runner.Framework"),
@@ -245,4 +264,5 @@ lazy val `interface-test` = project
   )
 
 publish / skip := true
+Settings.shared
 disablePlugins(MimaPlugin)
