@@ -9,7 +9,12 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.OS }}
+    name: Test ${{ matrix.OS }}
+    strategy:
+      fail-fast: false
+      matrix:
+        OS: ["ubuntu-latest", "windows-latest"]
     steps:
     - uses: actions/checkout@v2
       with:
@@ -22,6 +27,7 @@ jobs:
         apps: sbt
     - name: Test
       run: ./.github/scripts/ci.sh
+      shell: bash
 
   publish:
     needs: test
