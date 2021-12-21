@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -exo pipefail
 
+export COURSIER_JNI="force"
+
 TEST_VERSION="0.1.0-test"
 sbt \
   +test \
