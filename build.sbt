@@ -264,4 +264,5 @@ lazy val `interface-test` = project
   )
 
 publish / skip := true
+Settings.shared
 disablePlugins(MimaPlugin)
