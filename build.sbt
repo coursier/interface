@@ -163,7 +163,7 @@ lazy val interface = project
     Settings.shared,
     Settings.mima(),
     libraryDependencies ++= Seq(
-      "io.get-coursier" %% "coursier" % "2.1.0-M2-1",
+      "io.get-coursier" %% "coursier" % "2.1.0-M3-1",
       "io.get-coursier.jniutils" % "windows-jni-utils-coursierapi" % "0.3.2"
     ),
 
