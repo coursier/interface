@@ -163,7 +163,7 @@ lazy val interface = project
     Settings.shared,
     Settings.mima(),
     libraryDependencies ++= Seq(
-      "io.get-coursier" %% "coursier" % "2.1.0-M2-1",
+      "io.get-coursier" %% "coursier" % "2.1.0-M4",
       "io.get-coursier.jniutils" % "windows-jni-utils-coursierapi" % "0.3.2"
     ),
 
@@ -171,8 +171,9 @@ lazy val interface = project
     testFrameworks += new TestFramework("utest.runner.Framework"),
 
     mimaBinaryIssueFilters ++= Seq(
-      // users shouln't ever reference those
+      // users shouldn't ever reference those
       ProblemFilters.exclude[Problem]("coursierapi.shaded.*"),
+      ProblemFilters.exclude[Problem]("coursierapi.internal.*")
     ),
 
     // clearing scalaModuleInfo in ivyModule, so that evicted doesn't
