@@ -171,8 +171,9 @@ lazy val interface = project
     testFrameworks += new TestFramework("utest.runner.Framework"),
 
     mimaBinaryIssueFilters ++= Seq(
-      // users shouln't ever reference those
+      // users shouldn't ever reference those
       ProblemFilters.exclude[Problem]("coursierapi.shaded.*"),
+      ProblemFilters.exclude[Problem]("coursierapi.internal.*")
     ),
 
     // clearing scalaModuleInfo in ivyModule, so that evicted doesn't
