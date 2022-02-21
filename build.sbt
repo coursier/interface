@@ -164,7 +164,7 @@ lazy val interface = project
     Settings.mima(),
     libraryDependencies ++= Seq(
       "io.get-coursier" %% "coursier" % "2.1.0-M4",
-      "io.get-coursier.jniutils" % "windows-jni-utils-coursierapi" % "0.3.2"
+      "io.get-coursier.jniutils" % "windows-jni-utils-coursierapi" % "0.3.3"
     ),
 
     libraryDependencies += "com.lihaoyi" %% "utest" % "0.7.10" % Test,
