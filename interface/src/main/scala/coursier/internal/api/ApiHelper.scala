@@ -11,6 +11,7 @@ import coursier.cache.{ArchiveCache, CacheDefaults, CacheLogger, FileCache, UnAr
 import coursier.core.{Authentication, Configuration}
 import coursier.error.{CoursierError, FetchError, ResolutionError}
 import coursier.ivy.IvyRepository
+import coursier.jvm.{JavaHome, JvmCache}
 import coursier.params.ResolutionParams
 import coursier.util.{Artifact, Task}
 
@@ -539,6 +540,16 @@ object ApiHelper {
       case Left(err) => throw err
       case Right(f) => f.orNull
     }
+  }
+
+  def jvmManagerGet(manager: coursierapi.JvmManager, jvmId: String): File = {
+
+    val jvmCache = JvmCache()
+      .withDefaultIndex
+      .withArchiveCache(archiveCache(manager.getArchiveCache))
+    val javaHome = JavaHome().withCache(jvmCache)
+
+    javaHome.get(jvmId).unsafeRun()(jvmCache.archiveCache.cache.ec)
   }
 
 }

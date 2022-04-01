@@ -59,7 +59,8 @@ lazy val interface = project
           rename("org.apache.commons.io.input.**", "coursierapi.shaded.commonsio.@1"),
           rename("org.codehaus.plexus.**", "coursierapi.shaded.plexus.@1"),
           rename("org.tukaani.xz.**", "coursierapi.shaded.xz.@1"),
-          rename("org.iq80.snappy.**", "coursierapi.shaded.snappy.@1")
+          rename("org.iq80.snappy.**", "coursierapi.shaded.snappy.@1"),
+          rename("com.github.plokhotnyuk.jsoniter_scala.core.**", "coursierapi.shaded.jsoniter.@1")
         )
 
         val processor = new com.eed3si9n.jarjar.JJProcessor(
@@ -168,6 +169,7 @@ lazy val interface = project
     Settings.mima(),
     libraryDependencies ++= Seq(
       "io.get-coursier" %% "coursier" % "2.1.0-M5",
+      "io.get-coursier" %% "coursier-jvm" % "2.1.0-M5",
       "io.get-coursier.jniutils" % "windows-jni-utils-coursierapi" % "0.3.2"
     ),
 
