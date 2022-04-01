@@ -48,6 +48,7 @@ public final class Cache {
             b.append(", logger=");
             b.append(logger.toString());
         }
+        b.append(")");
         return b.toString();
     }
 
