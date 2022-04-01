@@ -159,6 +159,9 @@ object ApiHelper {
   def credentials(auth: Authentication): Credentials =
     coursierapi.Credentials.of(auth.user, auth.passwordOpt.getOrElse(""))
 
+  def credentials(credentials: Credentials): Authentication =
+    Authentication(credentials.getUser, credentials.getPassword)
+
   def repository(repo: Repository): coursierapi.Repository =
     repo match {
       case mvn: MavenRepository =>
@@ -331,6 +334,12 @@ object ApiHelper {
     coursierapi.Artifact.of(artifact.url, artifact.changing, artifact.optional, credentials0)
   }
 
+  private def artifact(artifact: coursierapi.Artifact): Artifact =
+    Artifact(artifact.getUrl)
+      .withChanging(artifact.isChanging)
+      .withOptional(artifact.isOptional)
+      .withAuthentication(Option(artifact.getCredentials).map(credentials))
+
   def doFetch(apiFetch: coursierapi.Fetch): coursierapi.FetchResult = {
 
     val fetch0 = fetch(apiFetch)
@@ -502,6 +511,14 @@ object ApiHelper {
       JavaConverters.seqAsJavaList(listings),
       versionListing(res.versions)
     )
+  }
+
+  def cacheGet(cache: coursierapi.Cache, artifact: coursierapi.Artifact): File = {
+    val cache0 = ApiHelper.cache(cache)
+    cache0.file(ApiHelper.artifact(artifact)).run.unsafeRun()(cache0.ec) match {
+      case Left(err) => throw err
+      case Right(f) => f
+    }
   }
 
 }
