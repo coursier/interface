@@ -55,7 +55,11 @@ lazy val interface = project
           rename("org.fusesource.**", "coursierapi.shaded.org.fusesource.@1"),
           rename("io.github.alexarchambault.windowsansi.**", "coursierapi.shaded.windowsansi.@1"),
           rename("concurrentrefhashmap.**", "coursierapi.shaded.concurrentrefhashmap.@1"),
-          rename("org.codehaus.plexus.util.**", "coursierapi.shaded.plexusutil.@1")
+          rename("org.apache.commons.compress.**", "coursierapi.shaded.commonscompress.@1"),
+          rename("org.apache.commons.io.input.**", "coursierapi.shaded.commonsio.@1"),
+          rename("org.codehaus.plexus.**", "coursierapi.shaded.plexus.@1"),
+          rename("org.tukaani.xz.**", "coursierapi.shaded.xz.@1"),
+          rename("org.iq80.snappy.**", "coursierapi.shaded.snappy.@1")
         )
 
         val processor = new com.eed3si9n.jarjar.JJProcessor(

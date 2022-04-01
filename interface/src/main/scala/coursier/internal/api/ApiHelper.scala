@@ -4,11 +4,10 @@ import java.io.{File, OutputStreamWriter}
 import java.time.LocalDateTime
 import java.{util => ju}
 import java.util.concurrent.ExecutorService
-
 import coursier._
 import coursierapi.{Credentials, Logger, SimpleLogger}
 import coursier.cache.loggers.RefreshLogger
-import coursier.cache.{CacheDefaults, CacheLogger, FileCache}
+import coursier.cache.{ArchiveCache, CacheDefaults, CacheLogger, FileCache, UnArchiver}
 import coursier.core.{Authentication, Configuration}
 import coursier.error.{CoursierError, FetchError, ResolutionError}
 import coursier.ivy.IvyRepository
@@ -44,6 +43,8 @@ object ApiHelper {
     CacheDefaults.pool
   def defaultLocation(): File =
     CacheDefaults.location
+  def defaultArchiveCacheLocation(): File =
+    CacheDefaults.archiveCacheLocation
 
   def progressBarLogger(writer: OutputStreamWriter): Logger =
     WrappedLogger.of(RefreshLogger.create(writer))
@@ -518,6 +519,25 @@ object ApiHelper {
     cache0.file(ApiHelper.artifact(artifact)).run.unsafeRun()(cache0.ec) match {
       case Left(err) => throw err
       case Right(f) => f
+    }
+  }
+
+  def archiveCache(archiveCache: coursierapi.ArchiveCache): ArchiveCache[Task] =
+    ArchiveCache(archiveCache.getLocation, cache(archiveCache.getCache), UnArchiver.default())
+
+  def archiveCacheGet(archiveCache: coursierapi.ArchiveCache, artifact: coursierapi.Artifact): File = {
+    val archiveCache0 = ApiHelper.archiveCache(archiveCache)
+    archiveCache0.get(ApiHelper.artifact(artifact)).unsafeRun()(archiveCache0.cache.ec) match {
+      case Left(err) => throw err
+      case Right(f) => f
+    }
+  }
+
+  def archiveCacheGetIfExists(archiveCache: coursierapi.ArchiveCache, artifact: coursierapi.Artifact): File = {
+    val archiveCache0 = ApiHelper.archiveCache(archiveCache)
+    archiveCache0.getIfExists(ApiHelper.artifact(artifact)).unsafeRun()(archiveCache0.cache.ec) match {
+      case Left(err) => throw err
+      case Right(f) => f.orNull
     }
   }
 
