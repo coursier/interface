@@ -211,7 +211,7 @@ lazy val `interface-svm-subs` = project
   .dependsOn(interface)
   .settings(
     Settings.shared,
-    libraryDependencies += "org.graalvm.nativeimage" % "svm" % "21.3.1" % Provided,
+    libraryDependencies += "org.graalvm.nativeimage" % "svm" % "22.0.0.2" % Provided,
     autoScalaLibrary := false,
     crossVersion := CrossVersion.disabled,
     // we don't actually depend on that thanks to proguarding / shading in interface
