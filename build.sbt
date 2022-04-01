@@ -104,7 +104,7 @@ lazy val interface = project
       dest
     },
     addArtifact(Compile / packageBin / artifact, finalPackageBin),
-    Proguard / proguardVersion := "7.1.1",
+    Proguard / proguardVersion := "7.2.1",
     Proguard / proguardOptions ++= {
       val baseOptions = Seq(
         "-dontnote",
@@ -163,11 +163,11 @@ lazy val interface = project
     Settings.shared,
     Settings.mima(),
     libraryDependencies ++= Seq(
-      "io.get-coursier" %% "coursier" % "2.1.0-M4",
+      "io.get-coursier" %% "coursier" % "2.1.0-M5",
       "io.get-coursier.jniutils" % "windows-jni-utils-coursierapi" % "0.3.3"
     ),
 
-    libraryDependencies += "com.lihaoyi" %% "utest" % "0.7.10" % Test,
+    libraryDependencies += "com.lihaoyi" %% "utest" % "0.7.11" % Test,
     testFrameworks += new TestFramework("utest.runner.Framework"),
 
     mimaBinaryIssueFilters ++= Seq(
@@ -211,7 +211,7 @@ lazy val `interface-svm-subs` = project
   .dependsOn(interface)
   .settings(
     Settings.shared,
-    libraryDependencies += "org.graalvm.nativeimage" % "svm" % "21.3.0" % Provided,
+    libraryDependencies += "org.graalvm.nativeimage" % "svm" % "21.3.1" % Provided,
     autoScalaLibrary := false,
     crossVersion := CrossVersion.disabled,
     // we don't actually depend on that thanks to proguarding / shading in interface
@@ -225,7 +225,7 @@ lazy val interpolators = project
     Settings.mima(no213 = true),
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided,
-      "com.lihaoyi" %% "utest" % "0.7.10" % Test
+      "com.lihaoyi" %% "utest" % "0.7.11" % Test
     ),
     testFrameworks += new TestFramework("utest.runner.Framework"),
 
@@ -245,7 +245,7 @@ lazy val `interface-test` = project
     crossVersion := CrossVersion.disabled,
     libraryDependencies ++= Seq(
       "junit" % "junit" % "4.13.2" % Test,
-      "com.github.sbt" % "junit-interface" % "0.13.2" % Test
+      "com.github.sbt" % "junit-interface" % "0.13.3" % Test
     ),
     libraryDependencies ++= {
       val org = (interface / organization).value
