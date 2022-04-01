@@ -104,7 +104,7 @@ lazy val interface = project
       dest
     },
     addArtifact(Compile / packageBin / artifact, finalPackageBin),
-    Proguard / proguardVersion := "7.2.0",
+    Proguard / proguardVersion := "7.2.1",
     Proguard / proguardOptions ++= {
       val baseOptions = Seq(
         "-dontnote",
@@ -163,7 +163,7 @@ lazy val interface = project
     Settings.shared,
     Settings.mima(),
     libraryDependencies ++= Seq(
-      "io.get-coursier" %% "coursier" % "2.1.0-M4",
+      "io.get-coursier" %% "coursier" % "2.1.0-M5",
       "io.get-coursier.jniutils" % "windows-jni-utils-coursierapi" % "0.3.2"
     ),
 
