@@ -22,6 +22,10 @@ public final class Cache {
         return new Cache();
     }
 
+    public File get(Artifact artifact) {
+        return ApiHelper.cacheGet(this, artifact);
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof Cache) {
@@ -48,6 +52,7 @@ public final class Cache {
             b.append(", logger=");
             b.append(logger.toString());
         }
+        b.append(")");
         return b.toString();
     }
 

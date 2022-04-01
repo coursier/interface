@@ -55,7 +55,12 @@ lazy val interface = project
           rename("org.fusesource.**", "coursierapi.shaded.org.fusesource.@1"),
           rename("io.github.alexarchambault.windowsansi.**", "coursierapi.shaded.windowsansi.@1"),
           rename("concurrentrefhashmap.**", "coursierapi.shaded.concurrentrefhashmap.@1"),
-          rename("org.codehaus.plexus.util.**", "coursierapi.shaded.plexusutil.@1")
+          rename("org.apache.commons.compress.**", "coursierapi.shaded.commonscompress.@1"),
+          rename("org.apache.commons.io.input.**", "coursierapi.shaded.commonsio.@1"),
+          rename("org.codehaus.plexus.**", "coursierapi.shaded.plexus.@1"),
+          rename("org.tukaani.xz.**", "coursierapi.shaded.xz.@1"),
+          rename("org.iq80.snappy.**", "coursierapi.shaded.snappy.@1"),
+          rename("com.github.plokhotnyuk.jsoniter_scala.core.**", "coursierapi.shaded.jsoniter.@1")
         )
 
         val processor = new com.eed3si9n.jarjar.JJProcessor(
@@ -164,6 +169,7 @@ lazy val interface = project
     Settings.mima(),
     libraryDependencies ++= Seq(
       "io.get-coursier" %% "coursier" % "2.1.0-M5",
+      "io.get-coursier" %% "coursier-jvm" % "2.1.0-M5",
       "io.get-coursier.jniutils" % "windows-jni-utils-coursierapi" % "0.3.2"
     ),
 
@@ -183,7 +189,7 @@ lazy val interface = project
       val config = moduleSettings.value match {
         case config0: ModuleDescriptorConfiguration =>
           config0.withScalaModuleInfo(None)
-	case other => other
+	      case other => other
       }
       new is.Module(config)
     },

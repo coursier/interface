@@ -4,16 +4,16 @@ import java.io.{File, OutputStreamWriter}
 import java.time.LocalDateTime
 import java.{util => ju}
 import java.util.concurrent.ExecutorService
-
 import coursier._
 import coursierapi.{Credentials, Logger, SimpleLogger}
 import coursier.cache.loggers.RefreshLogger
-import coursier.cache.{CacheDefaults, CacheLogger, FileCache}
+import coursier.cache.{ArchiveCache, CacheDefaults, CacheLogger, FileCache, UnArchiver}
 import coursier.core.{Authentication, Configuration}
 import coursier.error.{CoursierError, FetchError, ResolutionError}
 import coursier.ivy.IvyRepository
+import coursier.jvm.{JavaHome, JvmCache}
 import coursier.params.ResolutionParams
-import coursier.util.Task
+import coursier.util.{Artifact, Task}
 
 import scala.collection.JavaConverters
 import scala.collection.JavaConverters._
@@ -44,6 +44,8 @@ object ApiHelper {
     CacheDefaults.pool
   def defaultLocation(): File =
     CacheDefaults.location
+  def defaultArchiveCacheLocation(): File =
+    CacheDefaults.archiveCacheLocation
 
   def progressBarLogger(writer: OutputStreamWriter): Logger =
     WrappedLogger.of(RefreshLogger.create(writer))
@@ -158,6 +160,9 @@ object ApiHelper {
 
   def credentials(auth: Authentication): Credentials =
     coursierapi.Credentials.of(auth.user, auth.passwordOpt.getOrElse(""))
+
+  def credentials(credentials: Credentials): Authentication =
+    Authentication(credentials.getUser, credentials.getPassword)
 
   def repository(repo: Repository): coursierapi.Repository =
     repo match {
@@ -326,6 +331,17 @@ object ApiHelper {
         coursierapi.error.SimpleResolutionError.of(s.getMessage)
     }
 
+  private def artifact(artifact: Artifact): coursierapi.Artifact = {
+    val credentials0 = artifact.authentication.map(credentials).orNull
+    coursierapi.Artifact.of(artifact.url, artifact.changing, artifact.optional, credentials0)
+  }
+
+  private def artifact(artifact: coursierapi.Artifact): Artifact =
+    Artifact(artifact.getUrl)
+      .withChanging(artifact.isChanging)
+      .withOptional(artifact.isOptional)
+      .withAuthentication(Option(artifact.getCredentials).map(credentials))
+
   def doFetch(apiFetch: coursierapi.Fetch): coursierapi.FetchResult = {
 
     val fetch0 = fetch(apiFetch)
@@ -333,7 +349,7 @@ object ApiHelper {
       if (apiFetch.getFetchCacheIKnowWhatImDoing == null)
         fetch0.eitherResult()
       else {
-        val dummyArtifact = coursier.util.Artifact("", Map(), Map(), changing = false, optional = false, None)
+        val dummyArtifact = Artifact("", Map(), Map(), changing = false, optional = false, None)
         fetch0.either().map(files => Fetch.Result().withExtraArtifacts(files.map((dummyArtifact, _))))
       }
 
@@ -369,8 +385,7 @@ object ApiHelper {
       case Right(result) =>
         val artifactFiles = new ju.ArrayList[ju.Map.Entry[coursierapi.Artifact, File]]
         for ((a, f) <- result.artifacts) {
-          val credentials0 = a.authentication.map(credentials).orNull
-          val a0 = coursierapi.Artifact.of(a.url, a.changing, a.optional, credentials0)
+          val a0 = artifact(a)
           val ent = new ju.AbstractMap.SimpleEntry(a0, f)
           artifactFiles.add(ent)
         }
@@ -498,6 +513,43 @@ object ApiHelper {
       JavaConverters.seqAsJavaList(listings),
       versionListing(res.versions)
     )
+  }
+
+  def cacheGet(cache: coursierapi.Cache, artifact: coursierapi.Artifact): File = {
+    val cache0 = ApiHelper.cache(cache)
+    cache0.file(ApiHelper.artifact(artifact)).run.unsafeRun()(cache0.ec) match {
+      case Left(err) => throw err
+      case Right(f) => f
+    }
+  }
+
+  def archiveCache(archiveCache: coursierapi.ArchiveCache): ArchiveCache[Task] =
+    ArchiveCache(archiveCache.getLocation, cache(archiveCache.getCache), UnArchiver.default())
+
+  def archiveCacheGet(archiveCache: coursierapi.ArchiveCache, artifact: coursierapi.Artifact): File = {
+    val archiveCache0 = ApiHelper.archiveCache(archiveCache)
+    archiveCache0.get(ApiHelper.artifact(artifact)).unsafeRun()(archiveCache0.cache.ec) match {
+      case Left(err) => throw err
+      case Right(f) => f
+    }
+  }
+
+  def archiveCacheGetIfExists(archiveCache: coursierapi.ArchiveCache, artifact: coursierapi.Artifact): File = {
+    val archiveCache0 = ApiHelper.archiveCache(archiveCache)
+    archiveCache0.getIfExists(ApiHelper.artifact(artifact)).unsafeRun()(archiveCache0.cache.ec) match {
+      case Left(err) => throw err
+      case Right(f) => f.orNull
+    }
+  }
+
+  def jvmManagerGet(manager: coursierapi.JvmManager, jvmId: String): File = {
+
+    val jvmCache = JvmCache()
+      .withDefaultIndex
+      .withArchiveCache(archiveCache(manager.getArchiveCache))
+    val javaHome = JavaHome().withCache(jvmCache)
+
+    javaHome.get(jvmId).unsafeRun()(jvmCache.archiveCache.cache.ec)
   }
 
 }
