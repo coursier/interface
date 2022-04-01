@@ -183,7 +183,7 @@ lazy val interface = project
       val config = moduleSettings.value match {
         case config0: ModuleDescriptorConfiguration =>
           config0.withScalaModuleInfo(None)
-	case other => other
+	      case other => other
       }
       new is.Module(config)
     },
