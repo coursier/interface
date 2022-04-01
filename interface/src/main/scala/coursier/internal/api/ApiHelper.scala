@@ -13,7 +13,7 @@ import coursier.core.{Authentication, Configuration}
 import coursier.error.{CoursierError, FetchError, ResolutionError}
 import coursier.ivy.IvyRepository
 import coursier.params.ResolutionParams
-import coursier.util.Task
+import coursier.util.{Artifact, Task}
 
 import scala.collection.JavaConverters
 import scala.collection.JavaConverters._
@@ -326,6 +326,11 @@ object ApiHelper {
         coursierapi.error.SimpleResolutionError.of(s.getMessage)
     }
 
+  private def artifact(artifact: Artifact): coursierapi.Artifact = {
+    val credentials0 = artifact.authentication.map(credentials).orNull
+    coursierapi.Artifact.of(artifact.url, artifact.changing, artifact.optional, credentials0)
+  }
+
   def doFetch(apiFetch: coursierapi.Fetch): coursierapi.FetchResult = {
 
     val fetch0 = fetch(apiFetch)
@@ -333,7 +338,7 @@ object ApiHelper {
       if (apiFetch.getFetchCacheIKnowWhatImDoing == null)
         fetch0.eitherResult()
       else {
-        val dummyArtifact = coursier.util.Artifact("", Map(), Map(), changing = false, optional = false, None)
+        val dummyArtifact = Artifact("", Map(), Map(), changing = false, optional = false, None)
         fetch0.either().map(files => Fetch.Result().withExtraArtifacts(files.map((dummyArtifact, _))))
       }
 
@@ -369,8 +374,7 @@ object ApiHelper {
       case Right(result) =>
         val artifactFiles = new ju.ArrayList[ju.Map.Entry[coursierapi.Artifact, File]]
         for ((a, f) <- result.artifacts) {
-          val credentials0 = a.authentication.map(credentials).orNull
-          val a0 = coursierapi.Artifact.of(a.url, a.changing, a.optional, credentials0)
+          val a0 = artifact(a)
           val ent = new ju.AbstractMap.SimpleEntry(a0, f)
           artifactFiles.add(ent)
         }
