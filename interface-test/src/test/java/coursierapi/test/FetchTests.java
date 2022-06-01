@@ -1,6 +1,7 @@
 package coursierapi.test;
 
 import coursierapi.Dependency;
+import coursierapi.Publication;
 import coursierapi.Fetch;
 import coursierapi.FetchResult;
 import coursierapi.error.CoursierError;
@@ -42,6 +43,30 @@ public class FetchTests {
         assertEquals(expectedFileNames, fileNames);
         assertEquals(expectedDependencies, result.getDependencies());
 
+    }
+
+
+    @Test
+    public void withPublication() {
+        Dependency dep = Dependency.of("com.google.protobuf", "protobuf-java", "3.18.2")
+                .withPublication(new Publication("protoc", "jar", "exe", "windows-x86_32"));
+
+        Fetch fetch = Fetch.create().addDependencies(dep);
+
+        FetchResult result;
+        try {
+            result = fetch.fetchResult();
+        } catch (CoursierError e) {
+            throw new RuntimeException(e);
+        }
+
+        Set<String> fileNames = new HashSet<>();
+        for (File f : result.getFiles()) {
+            fileNames.add(f.getName());
+        }
+
+        Set<String> expectedFileNames = new HashSet<>(Arrays.asList("shapeless_2.13-2.3.3.jar", "scala-library-2.13.0.jar"));
+        assertEquals(expectedFileNames, fileNames);
     }
 
 }
