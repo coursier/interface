@@ -65,7 +65,7 @@ public class FetchTests {
             fileNames.add(f.getName());
         }
 
-        Set<String> expectedFileNames = new HashSet<>(Arrays.asList("shapeless_2.13-2.3.3.jar", "scala-library-2.13.0.jar"));
+        Set<String> expectedFileNames = new HashSet<>(Arrays.asList("protoc-3.18.2-windows-x86_32.exe"));
         assertEquals(expectedFileNames, fileNames);
     }
 
