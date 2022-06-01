@@ -8,7 +8,7 @@ import coursier._
 import coursierapi.{Credentials, Logger, SimpleLogger}
 import coursier.cache.loggers.RefreshLogger
 import coursier.cache.{ArchiveCache, CacheDefaults, CacheLogger, FileCache, UnArchiver}
-import coursier.core.{Authentication, Configuration}
+import coursier.core.{Authentication, Configuration, Extension, Publication}
 import coursier.error.{CoursierError, FetchError, ResolutionError}
 import coursier.ivy.IvyRepository
 import coursier.jvm.{JavaHome, JvmCache}
@@ -117,11 +117,18 @@ object ApiHelper {
     val tpe = Type(dep.getType)
     val classifier = Classifier(dep.getClassifier)
 
-    Dependency(module0, dep.getVersion)
+    val dep0 = Dependency(module0, dep.getVersion)
       .withExclusions(exclusions)
       .withConfiguration(configuration)
       .withAttributes(Attributes(tpe, classifier))
       .withTransitive(dep.isTransitive)
+
+    Option(dep.getPublication)
+      .map { p =>
+        val p0 = Publication(p.getName, Type(p.getType), Extension(p.getExtension), Classifier(p.getClassifier))
+        dep0.withPublication(p0)
+      }
+      .getOrElse(dep0)
   }
 
   def dependency(dep: Dependency): coursierapi.Dependency =
