@@ -48,7 +48,7 @@ public class FetchTests {
 
     @Test
     public void withPublication() {
-        Dependency dep = Dependency.of("com.google.protobuf", "protobuf", "3.18.2")
+        Dependency dep = Dependency.of("com.google.protobuf", "protoc", "3.18.2")
                 .withPublication(new Publication("protoc", "jar", "exe", "windows-x86_32"));
 
         Fetch fetch = Fetch.create().addDependencies(dep);
