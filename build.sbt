@@ -247,6 +247,7 @@ lazy val `interface-test` = project
   .settings(
     Settings.shared,
     publish / skip := true,
+    crossPaths := false, // https://github.com/sbt/junit-interface/issues/35
     autoScalaLibrary := false,
     crossVersion := CrossVersion.disabled,
     libraryDependencies ++= Seq(
