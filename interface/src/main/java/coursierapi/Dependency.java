@@ -107,7 +107,7 @@ public final class Dependency implements Serializable {
                     this.configuration.equals(other.configuration) &&
                     this.type.equals(other.type) &&
                     this.classifier.equals(other.classifier) &&
-                    (this.publication != null ? this.publication.equals(other.publication) : other.publication == null) &&
+                    Objects.equals(this.publication, other.publication) &&
                     this.transitive == other.transitive;
         }
         return false;
@@ -115,7 +115,7 @@ public final class Dependency implements Serializable {
 
     @Override
     public int hashCode() {
-        return 37 * (37 * (37 * (37 * (37 * (37 * (37 * (17 + module.hashCode()) + version.hashCode()) + exclusions.hashCode()) + configuration.hashCode()) + type.hashCode()) + classifier.hashCode()) + (publication != null ? publication.hashCode() : 0)) + Boolean.hashCode(transitive);
+        return 37 * (37 * (37 * (37 * (37 * (37 * (37 * (17 + module.hashCode()) + version.hashCode()) + exclusions.hashCode()) + configuration.hashCode()) + type.hashCode()) + classifier.hashCode()) + Objects.hashCode(publication)) + Boolean.hashCode(transitive);
     }
 
     @Override
