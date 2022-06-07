@@ -263,7 +263,9 @@ lazy val `interface-test` = project
     },
     Test / unmanagedClasspath ++= Def.taskDyn {
       if (sys.env.get("TEST_VERSION").isEmpty)
-        Def.task { Seq((interface / finalPackageBin).value) }
+        Def.task {
+          Seq((interface / finalPackageBin).value)
+	}
       else
         Def.task(Seq.empty[File])
     }.value
