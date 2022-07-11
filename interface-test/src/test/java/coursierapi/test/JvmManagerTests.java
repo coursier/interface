@@ -51,7 +51,7 @@ public class JvmManagerTests {
         if (exitCode != 0)
             System.err.println("Warning: " + javaBin + " -version command exited with code " + exitCode);
 
-        assertTrue(output.contains("openjdk version \"18."));
+        assertTrue(output.contains("openjdk version \"18"));
         assertTrue(output.contains("Zulu18"));
     }
 }

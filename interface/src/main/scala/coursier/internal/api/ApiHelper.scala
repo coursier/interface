@@ -8,7 +8,7 @@ import coursier._
 import coursierapi.{Credentials, Logger, SimpleLogger}
 import coursier.cache.loggers.RefreshLogger
 import coursier.cache.{ArchiveCache, CacheDefaults, CacheLogger, FileCache, UnArchiver}
-import coursier.core.{Authentication, Configuration, Extension, Publication}
+import coursier.core.{Authentication, Configuration, Extension, Publication, Version}
 import coursier.error.{CoursierError, FetchError, ResolutionError}
 import coursier.ivy.IvyRepository
 import coursier.jvm.{JavaHome, JvmCache}
@@ -558,5 +558,8 @@ object ApiHelper {
 
     javaHome.get(jvmId).unsafeRun()(jvmCache.archiveCache.cache.ec)
   }
+
+  def compareVersions(version0: String, version1: String): Int =
+    Version(version0).compareTo(Version(version1))
 
 }

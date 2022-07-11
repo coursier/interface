@@ -109,7 +109,7 @@ lazy val interface = project
       dest
     },
     addArtifact(Compile / packageBin / artifact, finalPackageBin),
-    Proguard / proguardVersion := "7.2.1",
+    Proguard / proguardVersion := "7.2.2",
     Proguard / proguardOptions ++= {
       val baseOptions = Seq(
         "-dontnote",
@@ -168,12 +168,16 @@ lazy val interface = project
     Settings.shared,
     Settings.mima(),
     libraryDependencies ++= Seq(
-      "io.get-coursier" %% "coursier" % "2.1.0-M5",
-      "io.get-coursier" %% "coursier-jvm" % "2.1.0-M5",
+      ("io.get-coursier" %% "coursier" % "2.1.0-M6-28-gbad85693f")
+        .exclude("com.github.plokhotnyuk.jsoniter-scala", "jsoniter-scala-macros_2.12")
+        .exclude("com.github.plokhotnyuk.jsoniter-scala", "jsoniter-scala-macros_2.13"),
+      ("io.get-coursier" %% "coursier-jvm" % "2.1.0-M6-28-gbad85693f")
+        .exclude("com.github.plokhotnyuk.jsoniter-scala", "jsoniter-scala-macros_2.12")
+        .exclude("com.github.plokhotnyuk.jsoniter-scala", "jsoniter-scala-macros_2.13"),
       "io.get-coursier.jniutils" % "windows-jni-utils-coursierapi" % "0.3.2"
     ),
 
-    libraryDependencies += "com.lihaoyi" %% "utest" % "0.7.11" % Test,
+    libraryDependencies += "com.lihaoyi" %% "utest" % "0.8.0" % Test,
     testFrameworks += new TestFramework("utest.runner.Framework"),
 
     mimaBinaryIssueFilters ++= Seq(
@@ -231,7 +235,7 @@ lazy val interpolators = project
     Settings.mima(no213 = true),
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided,
-      "com.lihaoyi" %% "utest" % "0.7.11" % Test
+      "com.lihaoyi" %% "utest" % "0.8.0" % Test
     ),
     testFrameworks += new TestFramework("utest.runner.Framework"),
 
