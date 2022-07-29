@@ -168,10 +168,10 @@ lazy val interface = project
     Settings.shared,
     Settings.mima(),
     libraryDependencies ++= Seq(
-      ("io.get-coursier" %% "coursier" % "2.1.0-M6-28-gbad85693f")
+      ("io.get-coursier" %% "coursier" % "2.1.0-M6-44-gc47ecec07")
         .exclude("com.github.plokhotnyuk.jsoniter-scala", "jsoniter-scala-macros_2.12")
         .exclude("com.github.plokhotnyuk.jsoniter-scala", "jsoniter-scala-macros_2.13"),
-      ("io.get-coursier" %% "coursier-jvm" % "2.1.0-M6-28-gbad85693f")
+      ("io.get-coursier" %% "coursier-jvm" % "2.1.0-M6-44-gc47ecec07")
         .exclude("com.github.plokhotnyuk.jsoniter-scala", "jsoniter-scala-macros_2.12")
         .exclude("com.github.plokhotnyuk.jsoniter-scala", "jsoniter-scala-macros_2.13"),
       "io.get-coursier.jniutils" % "windows-jni-utils-coursierapi" % "0.3.2"
