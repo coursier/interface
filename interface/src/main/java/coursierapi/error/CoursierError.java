@@ -7,7 +7,6 @@ public abstract class CoursierError extends Exception {
     }
 
     public static CoursierError of(String message) {
-        return new CoursierError(message) {
-        };
+        return new SimpleCoursierError(message);
     }
 }

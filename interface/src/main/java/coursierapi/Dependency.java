@@ -13,6 +13,7 @@ public final class Dependency implements Serializable {
     private String configuration;
     private String type;
     private String classifier;
+    private Publication publication;
     private boolean transitive;
 
 
@@ -23,6 +24,7 @@ public final class Dependency implements Serializable {
         this.configuration = "";
         this.type = "";
         this.classifier = "";
+        this.publication = null;
         this.transitive = true;
     }
 
@@ -38,6 +40,7 @@ public final class Dependency implements Serializable {
                 .withConfiguration(dependency.getConfiguration())
                 .withType(dependency.getType())
                 .withClassifier(dependency.getClassifier())
+                .withPublication(dependency.getPublication())
                 .withTransitive(dependency.isTransitive());
     }
 
@@ -82,6 +85,11 @@ public final class Dependency implements Serializable {
         return this;
     }
 
+    public Dependency withPublication(Publication publication) {
+        this.publication = publication;
+        return this;
+    }
+
     public Dependency withTransitive(boolean transitive) {
         this.transitive = transitive;
         return this;
@@ -99,6 +107,7 @@ public final class Dependency implements Serializable {
                     this.configuration.equals(other.configuration) &&
                     this.type.equals(other.type) &&
                     this.classifier.equals(other.classifier) &&
+                    Objects.equals(this.publication, other.publication) &&
                     this.transitive == other.transitive;
         }
         return false;
@@ -106,7 +115,7 @@ public final class Dependency implements Serializable {
 
     @Override
     public int hashCode() {
-        return 37 * (37 * (37 * (37 * (37 * (37 * (17 + module.hashCode()) + version.hashCode()) + exclusions.hashCode()) + configuration.hashCode()) + type.hashCode()) + classifier.hashCode()) + Boolean.hashCode(transitive);
+        return 37 * (37 * (37 * (37 * (37 * (37 * (37 * (17 + module.hashCode()) + version.hashCode()) + exclusions.hashCode()) + configuration.hashCode()) + type.hashCode()) + classifier.hashCode()) + Objects.hashCode(publication)) + Boolean.hashCode(transitive);
     }
 
     @Override
@@ -134,6 +143,10 @@ public final class Dependency implements Serializable {
         if (!classifier.isEmpty()) {
             b.append(", classifier=");
             b.append(classifier);
+        }
+        if (publication != null) {
+            b.append(", publication=");
+            b.append(publication);
         }
         if (!transitive) {
             b.append(", intransitive");
@@ -165,6 +178,10 @@ public final class Dependency implements Serializable {
 
     public String getClassifier() {
         return classifier;
+    }
+
+    public Publication getPublication() {
+        return publication;
     }
 
     public boolean isTransitive() {

@@ -9,40 +9,45 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.OS }}
+    name: Test ${{ matrix.OS }}
+    strategy:
+      fail-fast: false
+      matrix:
+        OS: ["ubuntu-latest", "macos-latest", "windows-latest"]
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0
         submodules: true
     - uses: coursier/cache-action@v6
-    - uses: laughedelic/coursier-setup@v1
+    - uses: coursier/setup-action@v1.2.0
       with:
         jvm: 8
-        apps: sbt-launcher
+        apps: sbt
     - name: Test
       run: ./.github/scripts/ci.sh
+      shell: bash
 
   publish:
     needs: test
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0
         submodules: true
     - uses: coursier/cache-action@v6
-    - uses: laughedelic/coursier-setup@v1
+    - uses: coursier/setup-action@v1.2.0
       with:
         jvm: 8
-        apps: sbt-launcher
     - run: .github/scripts/gpg-setup.sh
       shell: bash
       env:
         PGP_SECRET: ${{ secrets.PGP_SECRET }}
     - name: Release
-      run: sbt ci-release
+      run: sbtn ci-release
       env:
         PGP_SECRET: ${{ secrets.PGP_SECRET }}
         PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
