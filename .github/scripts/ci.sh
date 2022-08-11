@@ -5,10 +5,8 @@ export COURSIER_JNI="force"
 
 TEST_VERSION="0.1.0-test"
 
-echo "Running tests and eviction checks"
-sbt \
-  +test \
-  +evictionCheck
+echo "Running tests"
+sbt +test
 
 IS_UNIX="false"
 case "$(uname -s)" in

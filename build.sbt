@@ -55,7 +55,12 @@ lazy val interface = project
           rename("org.fusesource.**", "coursierapi.shaded.org.fusesource.@1"),
           rename("io.github.alexarchambault.windowsansi.**", "coursierapi.shaded.windowsansi.@1"),
           rename("concurrentrefhashmap.**", "coursierapi.shaded.concurrentrefhashmap.@1"),
-          rename("org.codehaus.plexus.util.**", "coursierapi.shaded.plexusutil.@1")
+          rename("org.apache.commons.compress.**", "coursierapi.shaded.commonscompress.@1"),
+          rename("org.apache.commons.io.input.**", "coursierapi.shaded.commonsio.@1"),
+          rename("org.codehaus.plexus.**", "coursierapi.shaded.plexus.@1"),
+          rename("org.tukaani.xz.**", "coursierapi.shaded.xz.@1"),
+          rename("org.iq80.snappy.**", "coursierapi.shaded.snappy.@1"),
+          rename("com.github.plokhotnyuk.jsoniter_scala.core.**", "coursierapi.shaded.jsoniter.@1")
         )
 
         val processor = new com.eed3si9n.jarjar.JJProcessor(
@@ -104,7 +109,7 @@ lazy val interface = project
       dest
     },
     addArtifact(Compile / packageBin / artifact, finalPackageBin),
-    Proguard / proguardVersion := "7.2.1",
+    Proguard / proguardVersion := "7.2.2",
     Proguard / proguardOptions ++= {
       val baseOptions = Seq(
         "-dontnote",
@@ -163,11 +168,16 @@ lazy val interface = project
     Settings.shared,
     Settings.mima(),
     libraryDependencies ++= Seq(
-      "io.get-coursier" %% "coursier" % "2.1.0-M5",
+      ("io.get-coursier" %% "coursier" % "2.1.0-M6-49-gff26f8e39")
+        .exclude("com.github.plokhotnyuk.jsoniter-scala", "jsoniter-scala-macros_2.12")
+        .exclude("com.github.plokhotnyuk.jsoniter-scala", "jsoniter-scala-macros_2.13"),
+      ("io.get-coursier" %% "coursier-jvm" % "2.1.0-M6-49-gff26f8e39")
+        .exclude("com.github.plokhotnyuk.jsoniter-scala", "jsoniter-scala-macros_2.12")
+        .exclude("com.github.plokhotnyuk.jsoniter-scala", "jsoniter-scala-macros_2.13"),
       "io.get-coursier.jniutils" % "windows-jni-utils-coursierapi" % "0.3.3"
     ),
 
-    libraryDependencies += "com.lihaoyi" %% "utest" % "0.7.11" % Test,
+    libraryDependencies += "com.lihaoyi" %% "utest" % "0.8.0" % Test,
     testFrameworks += new TestFramework("utest.runner.Framework"),
 
     mimaBinaryIssueFilters ++= Seq(
@@ -183,7 +193,7 @@ lazy val interface = project
       val config = moduleSettings.value match {
         case config0: ModuleDescriptorConfiguration =>
           config0.withScalaModuleInfo(None)
-	case other => other
+	      case other => other
       }
       new is.Module(config)
     },
@@ -211,7 +221,7 @@ lazy val `interface-svm-subs` = project
   .dependsOn(interface)
   .settings(
     Settings.shared,
-    libraryDependencies += "org.graalvm.nativeimage" % "svm" % "21.3.1" % Provided,
+    libraryDependencies += "org.graalvm.nativeimage" % "svm" % "22.0.0.2" % Provided,
     autoScalaLibrary := false,
     crossVersion := CrossVersion.disabled,
     // we don't actually depend on that thanks to proguarding / shading in interface
@@ -225,7 +235,7 @@ lazy val interpolators = project
     Settings.mima(no213 = true),
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided,
-      "com.lihaoyi" %% "utest" % "0.7.11" % Test
+      "com.lihaoyi" %% "utest" % "0.8.0" % Test
     ),
     testFrameworks += new TestFramework("utest.runner.Framework"),
 
@@ -241,6 +251,7 @@ lazy val `interface-test` = project
   .settings(
     Settings.shared,
     publish / skip := true,
+    crossPaths := false, // https://github.com/sbt/junit-interface/issues/35
     autoScalaLibrary := false,
     crossVersion := CrossVersion.disabled,
     libraryDependencies ++= Seq(
