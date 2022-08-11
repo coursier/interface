@@ -32,14 +32,15 @@ lazy val interface = project
         former + "-scala-" + sbv + "-shaded"
     },
     finalPackageBin := {
-      import org.pantsbuild.jarjar._
-      import org.pantsbuild.jarjar.util.StandaloneJarProcessor
+      import com.eed3si9n.jarjar._
+      import com.eed3si9n.jarjar.util.StandaloneJarProcessor
 
       val orig = (Proguard / proguard).value.head
       val origLastModified = orig.lastModified()
       val dest = orig.getParentFile / s"${orig.getName.stripSuffix(".jar")}-with-renaming-test.jar"
       if (!dest.exists() || dest.lastModified() < origLastModified) {
         val tmpDest = orig.getParentFile / s"${orig.getName.stripSuffix(".jar")}-with-renaming-test-0.jar"
+        val tmpDest1 = orig.getParentFile / s"${orig.getName.stripSuffix(".jar")}-with-renaming-test-1.jar"
 
         def rename(from: String, to: String): Rule = {
           val rule = new Rule
@@ -54,10 +55,15 @@ lazy val interface = project
           rename("org.fusesource.**", "coursierapi.shaded.org.fusesource.@1"),
           rename("io.github.alexarchambault.windowsansi.**", "coursierapi.shaded.windowsansi.@1"),
           rename("concurrentrefhashmap.**", "coursierapi.shaded.concurrentrefhashmap.@1"),
-          rename("org.codehaus.plexus.util.**", "coursierapi.shaded.plexusutil.@1")
+          rename("org.apache.commons.compress.**", "coursierapi.shaded.commonscompress.@1"),
+          rename("org.apache.commons.io.input.**", "coursierapi.shaded.commonsio.@1"),
+          rename("org.codehaus.plexus.**", "coursierapi.shaded.plexus.@1"),
+          rename("org.tukaani.xz.**", "coursierapi.shaded.xz.@1"),
+          rename("org.iq80.snappy.**", "coursierapi.shaded.snappy.@1"),
+          rename("com.github.plokhotnyuk.jsoniter_scala.core.**", "coursierapi.shaded.jsoniter.@1")
         )
 
-        val processor = new org.pantsbuild.jarjar.JJProcessor(
+        val processor = new com.eed3si9n.jarjar.JJProcessor(
           rules,
           verbose = false,
           skipManifest = true,
@@ -76,20 +82,34 @@ lazy val interface = project
         assert(directoriesToBeRemoved.forall(_.endsWith("/")))
         ZipUtil.removeFromZip(
           tmpDest,
-          dest,
+          tmpDest1,
           name =>
             toBeRemoved(name) || directoriesToBeRemoved.exists(dir =>
               name.startsWith(dir)
             )
         )
-
         tmpDest.delete()
+
+        val serviceContent =
+          ZipUtil.zipEntryContent(orig, "META-INF/services/coursier.jniutils.NativeApi").getOrElse {
+            sys.error(s"META-INF/services/coursier.jniutils.NativeApi not found in $orig")
+          }
+
+        ZipUtil.addOrOverwriteInZip(
+          tmpDest1,
+          dest,
+          Seq(
+            "META-INF/services/coursierapi.shaded.coursier.jniutils.NativeApi" -> serviceContent
+          )
+        )
+
+        tmpDest1.delete()
       }
       Check.onlyNamespace("coursierapi", dest)
       dest
     },
     addArtifact(Compile / packageBin / artifact, finalPackageBin),
-    Proguard / proguardVersion := "7.1.1",
+    Proguard / proguardVersion := "7.2.2",
     Proguard / proguardOptions ++= {
       val baseOptions = Seq(
         "-dontnote",
@@ -123,6 +143,7 @@ lazy val interface = project
     Proguard / proguardInputFilter := { file =>
       file.name match {
         case n if n.startsWith("interface") => None // keep META-INF from main JAR
+        case n if n.startsWith("windows-jni-utils") => Some("!META-INF/MANIFEST.MF")
         case n if n.startsWith("coursier-core") => Some("!META-INF/**,!coursier.properties,!coursier/coursier.properties")
         case n if n.startsWith("scala-xml") => Some("!META-INF/**,!scala-xml.properties")
         case n if n.startsWith("scala-library") => Some("!META-INF/**,!library.properties,!rootdoc.txt")
@@ -146,14 +167,19 @@ lazy val interface = project
 
     Settings.shared,
     Settings.mima(),
-    libraryDependencies += "io.get-coursier" %% "coursier" % "2.1.0-M2",
+    libraryDependencies ++= Seq(
+      "io.get-coursier" %% "coursier" % "2.1.0-M6-49-gff26f8e39",
+      "io.get-coursier" %% "coursier-jvm" % "2.1.0-M6-49-gff26f8e39",
+      "io.get-coursier.jniutils" % "windows-jni-utils-coursierapi" % "0.3.3"
+    ),
 
-    libraryDependencies += "com.lihaoyi" %% "utest" % "0.7.10" % Test,
+    libraryDependencies += "com.lihaoyi" %% "utest" % "0.8.0" % Test,
     testFrameworks += new TestFramework("utest.runner.Framework"),
 
     mimaBinaryIssueFilters ++= Seq(
-      // users shouln't ever reference those
+      // users shouldn't ever reference those
       ProblemFilters.exclude[Problem]("coursierapi.shaded.*"),
+      ProblemFilters.exclude[Problem]("coursierapi.internal.*")
     ),
 
     // clearing scalaModuleInfo in ivyModule, so that evicted doesn't
@@ -163,7 +189,7 @@ lazy val interface = project
       val config = moduleSettings.value match {
         case config0: ModuleDescriptorConfiguration =>
           config0.withScalaModuleInfo(None)
-	case other => other
+	      case other => other
       }
       new is.Module(config)
     },
@@ -191,7 +217,7 @@ lazy val `interface-svm-subs` = project
   .dependsOn(interface)
   .settings(
     Settings.shared,
-    libraryDependencies += "org.graalvm.nativeimage" % "svm" % "21.3.0" % Provided,
+    libraryDependencies += "org.graalvm.nativeimage" % "svm" % "22.0.0.2" % Provided,
     autoScalaLibrary := false,
     crossVersion := CrossVersion.disabled,
     // we don't actually depend on that thanks to proguarding / shading in interface
@@ -205,7 +231,7 @@ lazy val interpolators = project
     Settings.mima(no213 = true),
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided,
-      "com.lihaoyi" %% "utest" % "0.7.10" % Test
+      "com.lihaoyi" %% "utest" % "0.8.0" % Test
     ),
     testFrameworks += new TestFramework("utest.runner.Framework"),
 
@@ -221,11 +247,12 @@ lazy val `interface-test` = project
   .settings(
     Settings.shared,
     publish / skip := true,
+    crossPaths := false, // https://github.com/sbt/junit-interface/issues/35
     autoScalaLibrary := false,
     crossVersion := CrossVersion.disabled,
     libraryDependencies ++= Seq(
       "junit" % "junit" % "4.13.2" % Test,
-      "com.github.sbt" % "junit-interface" % "0.13.2" % Test
+      "com.github.sbt" % "junit-interface" % "0.13.3" % Test
     ),
     libraryDependencies ++= {
       val org = (interface / organization).value
@@ -245,4 +272,5 @@ lazy val `interface-test` = project
   )
 
 publish / skip := true
+Settings.shared
 disablePlugins(MimaPlugin)
