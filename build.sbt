@@ -95,7 +95,7 @@ lazy val interface = project
             sys.error(s"META-INF/services/coursier.jniutils.NativeApi not found in $orig")
           }
 
-        ZipUtil.addToZip(
+        ZipUtil.addOrOverwriteInZip(
           tmpDest1,
           dest,
           Seq(
