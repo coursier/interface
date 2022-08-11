@@ -174,7 +174,7 @@ lazy val interface = project
       ("io.get-coursier" %% "coursier-jvm" % "2.1.0-M6-49-gff26f8e39")
         .exclude("com.github.plokhotnyuk.jsoniter-scala", "jsoniter-scala-macros_2.12")
         .exclude("com.github.plokhotnyuk.jsoniter-scala", "jsoniter-scala-macros_2.13"),
-      "io.get-coursier.jniutils" % "windows-jni-utils-coursierapi" % "0.3.2"
+      "io.get-coursier.jniutils" % "windows-jni-utils-coursierapi" % "0.3.3"
     ),
 
     libraryDependencies += "com.lihaoyi" %% "utest" % "0.8.0" % Test,
