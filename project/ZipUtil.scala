@@ -63,14 +63,16 @@ object ZipUtil {
 
   }
 
-  def addToZip(sourceZip: File, destZip: File, toAdd: Seq[(String, Array[Byte])]): Unit = {
+  def addOrOverwriteInZip(sourceZip: File, destZip: File, toAdd: Seq[(String, Array[Byte])]): Unit = {
 
     val is = new FileInputStream(sourceZip)
     val os = new FileOutputStream(destZip)
     val bootstrapZip = new ZipInputStream(is)
     val outputZip = new ZipOutputStream(os)
 
-    for ((ent, data) <- zipEntries(bootstrapZip)) {
+    val strip = toAdd.map(_._1).toSet
+
+    for ((ent, data) <- zipEntries(bootstrapZip) if !strip.contains(ent.getName)) {
 
       // Same workaround as https://github.com/spring-projects/spring-boot/issues/13720
       // (https://github.com/spring-projects/spring-boot/commit/a50646b7cc3ad941e748dfb450077e3a73706205#diff-2ff64cd06c0b25857e3e0dfdb6733174R144)
