@@ -13,7 +13,8 @@ object Check {
       .filter { n =>
         !n.startsWith("META-INF/") && !n.startsWith(ns + "/") &&
           n != "reflect.properties" && // scala-reflect adds that
-          n != "scala-collection-compat.properties" // collection-compat adds that
+          n != "scala-collection-compat.properties" && // collection-compat adds that
+          !n.contains("/libzstd-jni-") // com.github.luben:zstd-jni stuff (pulled via plexus-archiver)
       }
       .toVector
       .sorted
