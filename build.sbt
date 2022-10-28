@@ -274,11 +274,15 @@ lazy val `interface-test` = project
       "junit" % "junit" % "4.13.2" % Test,
       "com.github.sbt" % "junit-interface" % "0.13.3" % Test
     ),
-    libraryDependencies ++= {
+    libraryDependencies += {
       val org = (interface / organization).value
       val name = (interface / moduleName).value
-      sys.env.get("TEST_VERSION").toSeq.map { v =>
-        org % name % v
+      sys.env.get("TEST_VERSION") match {
+        case Some(v) =>
+          org % name % v
+        case None =>
+          // only dependency of coursier-interface
+          "org.slf4j" % "slf4j-api" % "2.0.3"
       }
     },
     Test / unmanagedClasspath ++= Def.taskDyn {
