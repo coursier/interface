@@ -187,8 +187,8 @@ lazy val interface = project
     Settings.shared,
     Settings.mima(),
     libraryDependencies ++= Seq(
-      "io.get-coursier" %% "coursier" % "2.1.0-M7-34-gf519b50a3",
-      "io.get-coursier" %% "coursier-jvm" % "2.1.0-M7-34-gf519b50a3",
+      "io.get-coursier" %% "coursier" % "2.1.0-M7-39-gb8f3d7532",
+      "io.get-coursier" %% "coursier-jvm" % "2.1.0-M7-39-gb8f3d7532",
       "io.get-coursier.jniutils" % "windows-jni-utils-coursierapi" % "0.3.3",
       "org.slf4j" % "slf4j-api" % "2.0.3" // no need to shade that one…
     ),
