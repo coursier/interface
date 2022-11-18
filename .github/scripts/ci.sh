@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 set -exo pipefail
 
-export COURSIER_JNI="force"
+# Re-enable when switching to an sbt version that pulls an lm-coursier version
+# that has https://github.com/coursier/sbt-coursier/pull/403.
+# export COURSIER_JNI="force"
 
 TEST_VERSION="0.1.0-test"
 

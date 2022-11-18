@@ -418,10 +418,11 @@ object ApiHelper {
       .map(repository)
       .toVector
 
+    val binVersionOpt = Option(complete.getScalaBinaryVersion)
     val res = coursier.complete.Complete(cache0)
       .withRepositories(repositories)
-      .withScalaBinaryVersionOpt(Option(complete.getScalaBinaryVersion))
-      .withScalaVersionOpt(Option(complete.getScalaVersion))
+      .withScalaBinaryVersionOpt(binVersionOpt)
+      .withScalaVersionOpt(Option(complete.getScalaVersion), binVersionOpt.isEmpty)
       .withInput(complete.getInput)
       .complete()
       .unsafeRun()(cache0.ec)

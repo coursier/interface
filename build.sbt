@@ -56,11 +56,12 @@ lazy val interface = project
           rename("io.github.alexarchambault.windowsansi.**", "coursierapi.shaded.windowsansi.@1"),
           rename("concurrentrefhashmap.**", "coursierapi.shaded.concurrentrefhashmap.@1"),
           rename("org.apache.commons.compress.**", "coursierapi.shaded.commonscompress.@1"),
-          rename("org.apache.commons.io.input.**", "coursierapi.shaded.commonsio.@1"),
+          rename("org.apache.commons.io.**", "coursierapi.shaded.commonsio.@1"),
           rename("org.codehaus.plexus.**", "coursierapi.shaded.plexus.@1"),
           rename("org.tukaani.xz.**", "coursierapi.shaded.xz.@1"),
           rename("org.iq80.snappy.**", "coursierapi.shaded.snappy.@1"),
-          rename("com.github.plokhotnyuk.jsoniter_scala.core.**", "coursierapi.shaded.jsoniter.@1")
+          rename("com.github.plokhotnyuk.jsoniter_scala.core.**", "coursierapi.shaded.jsoniter.@1"),
+          rename("com.github.luben.zstd.**", "coursierapi.shaded.zstd.@1")
         )
 
         val processor = new com.eed3si9n.jarjar.JJProcessor(
@@ -109,7 +110,7 @@ lazy val interface = project
       dest
     },
     addArtifact(Compile / packageBin / artifact, finalPackageBin),
-    Proguard / proguardVersion := "7.2.2",
+    Proguard / proguardVersion := "7.3.0",
     Proguard / proguardOptions ++= {
       val baseOptions = Seq(
         "-dontnote",
@@ -128,13 +129,29 @@ lazy val interface = project
         else
           Nil
 
-      baseOptions ++ maybeJava9Options
+      val slf4jJarsOptions = {
+        val updateReport = updateFull.value
+        val report = updateReport
+          .configurations
+          .find(_.configuration.name == Compile.name)
+          .getOrElse {
+            sys.error(s"Configuration ${Compile.name} not found in update report (found configs: ${updateReport.configurations.map(_.configuration.name)})")
+          }
+        val moduleReports = report.modules
+        val slf4jJars = moduleReports
+          .find(r => r.module.organization == "org.slf4j" && r.module.name == "slf4j-api")
+          .toVector
+          .flatMap(_.artifacts.map(_._2))
+        slf4jJars.map(jar => s"-libraryjars $jar")
+      }
+
+      baseOptions ++ maybeJava9Options ++ slf4jJarsOptions
     },
     Proguard / proguard / javaOptions := Seq("-Xmx3172M"),
 
     // Adding the interface JAR rather than its classes directory.
     // The former contains META-INF stuff in particular.
-    Proguard / proguardInputs := (Proguard / proguardInputs).value.filter(f => !f.isDirectory || f.getName != "classes"),
+    Proguard / proguardInputs := (Proguard / proguardInputs).value.filter(f => (!f.isDirectory || f.getName != "classes") && !f.getName.startsWith("slf4j-api-")),
     Proguard / proguardInputs += (Compile / packageBin).value,
 
     Proguard / proguardBinaryDeps := Settings.getAllBinaryDeps.value,
@@ -155,6 +172,8 @@ lazy val interface = project
     pomPostProcess := { node =>
       new RuleTransformer(new RewriteRule {
         override def transform(node: XmlNode) = node match {
+          case elem: Elem if node.label == "dependency" && node.child.exists(n => n.label == "artifactId" && n.text.trim == "slf4j-api") =>
+            elem
           case _: Elem if node.label == "dependency" =>
             val org = node.child.find(_.label == "groupId").fold("")(_.text.trim)
             val name = node.child.find(_.label == "artifactId").fold("")(_.text.trim)
@@ -168,12 +187,13 @@ lazy val interface = project
     Settings.shared,
     Settings.mima(),
     libraryDependencies ++= Seq(
-      "io.get-coursier" %% "coursier" % "2.1.0-M6-49-gff26f8e39",
-      "io.get-coursier" %% "coursier-jvm" % "2.1.0-M6-49-gff26f8e39",
-      "io.get-coursier.jniutils" % "windows-jni-utils-coursierapi" % "0.3.3"
+      "io.get-coursier" %% "coursier" % "2.1.0-RC2",
+      "io.get-coursier" %% "coursier-jvm" % "2.1.0-RC2",
+      "io.get-coursier.jniutils" % "windows-jni-utils-coursierapi" % "0.3.3",
+      "org.slf4j" % "slf4j-api" % "2.0.3" // no need to shade that one…
     ),
 
-    libraryDependencies += "com.lihaoyi" %% "utest" % "0.8.0" % Test,
+    libraryDependencies += "com.lihaoyi" %% "utest" % "0.8.1" % Test,
     testFrameworks += new TestFramework("utest.runner.Framework"),
 
     mimaBinaryIssueFilters ++= Seq(
@@ -231,7 +251,7 @@ lazy val interpolators = project
     Settings.mima(no213 = true),
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided,
-      "com.lihaoyi" %% "utest" % "0.8.0" % Test
+      "com.lihaoyi" %% "utest" % "0.8.1" % Test
     ),
     testFrameworks += new TestFramework("utest.runner.Framework"),
 
@@ -254,11 +274,15 @@ lazy val `interface-test` = project
       "junit" % "junit" % "4.13.2" % Test,
       "com.github.sbt" % "junit-interface" % "0.13.3" % Test
     ),
-    libraryDependencies ++= {
+    libraryDependencies += {
       val org = (interface / organization).value
       val name = (interface / moduleName).value
-      sys.env.get("TEST_VERSION").toSeq.map { v =>
-        org % name % v
+      sys.env.get("TEST_VERSION") match {
+        case Some(v) =>
+          org % name % v
+        case None =>
+          // only dependency of coursier-interface
+          "org.slf4j" % "slf4j-api" % "2.0.3"
       }
     },
     Test / unmanagedClasspath ++= Def.taskDyn {
