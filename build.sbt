@@ -190,7 +190,7 @@ lazy val interface = project
       "io.get-coursier" %% "coursier" % "2.1.0-RC2",
       "io.get-coursier" %% "coursier-jvm" % "2.1.0-RC2",
       "io.get-coursier.jniutils" % "windows-jni-utils-coursierapi" % "0.3.3",
-      "org.slf4j" % "slf4j-api" % "2.0.3" // no need to shade that one…
+      "org.slf4j" % "slf4j-api" % "2.0.5" // no need to shade that one…
     ),
 
     libraryDependencies += "com.lihaoyi" %% "utest" % "0.8.1" % Test,
@@ -282,7 +282,7 @@ lazy val `interface-test` = project
           org % name % v
         case None =>
           // only dependency of coursier-interface
-          "org.slf4j" % "slf4j-api" % "2.0.3"
+          "org.slf4j" % "slf4j-api" % "2.0.5"
       }
     },
     Test / unmanagedClasspath ++= Def.taskDyn {
