@@ -20,13 +20,9 @@ import scala.collection.JavaConverters._
 
 object ApiHelper {
 
-  private[this] final case class ApiRepo(repo: Repository) extends coursierapi.Repository
-
   def defaultRepositories(): Array[coursierapi.Repository] =
     Resolve.defaultRepositories
-      .map { repo =>
-        ApiRepo(repo)
-      }
+      .map(repository(_))
       .toArray
 
   def ivy2Local(): coursierapi.IvyRepository = {
@@ -153,7 +149,6 @@ object ApiHelper {
 
   def repository(repo: coursierapi.Repository): Repository =
     repo match {
-      case ApiRepo(repo0) => repo0
       case mvn: coursierapi.MavenRepository =>
         MavenRepository(
           mvn.getBase,
