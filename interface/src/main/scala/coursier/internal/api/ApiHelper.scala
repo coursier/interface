@@ -20,6 +20,8 @@ import scala.collection.JavaConverters._
 
 object ApiHelper {
 
+  private[this] final case class ApiRepo(repo: Repository) extends coursierapi.Repository
+
   def defaultRepositories(): Array[coursierapi.Repository] =
     Resolve.defaultRepositories
       .map(repository(_))
@@ -149,6 +151,7 @@ object ApiHelper {
 
   def repository(repo: coursierapi.Repository): Repository =
     repo match {
+      case ApiRepo(repo0) => repo0
       case mvn: coursierapi.MavenRepository =>
         MavenRepository(
           mvn.getBase,
@@ -179,7 +182,7 @@ object ApiHelper {
           .withMetadataPattern(mdPatternOpt.orNull)
           .withCredentials(credentialsOpt.orNull)
       case other =>
-        throw new Exception(s"Unrecognized repository: " + other)
+        ApiRepo(other)
     }
 
   def resolutionParams(params: ResolutionParams): coursierapi.ResolutionParams = {
