@@ -24,9 +24,7 @@ object ApiHelper {
 
   def defaultRepositories(): Array[coursierapi.Repository] =
     Resolve.defaultRepositories
-      .map { repo =>
-        ApiRepo(repo)
-      }
+      .map(repository(_))
       .toArray
 
   def ivy2Local(): coursierapi.IvyRepository = {
@@ -184,7 +182,7 @@ object ApiHelper {
           .withMetadataPattern(mdPatternOpt.orNull)
           .withCredentials(credentialsOpt.orNull)
       case other =>
-        throw new Exception(s"Unrecognized repository: " + other)
+        ApiRepo(other)
     }
 
   def resolutionParams(params: ResolutionParams): coursierapi.ResolutionParams = {

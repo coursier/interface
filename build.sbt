@@ -110,7 +110,7 @@ lazy val interface = project
       dest
     },
     addArtifact(Compile / packageBin / artifact, finalPackageBin),
-    Proguard / proguardVersion := "7.3.0",
+    Proguard / proguardVersion := "7.3.2",
     Proguard / proguardOptions ++= {
       val baseOptions = Seq(
         "-dontnote",
@@ -187,10 +187,10 @@ lazy val interface = project
     Settings.shared,
     Settings.mima(),
     libraryDependencies ++= Seq(
-      "io.get-coursier" %% "coursier" % "2.1.0-RC2",
-      "io.get-coursier" %% "coursier-jvm" % "2.1.0-RC2",
+      "io.get-coursier" %% "coursier" % "2.1.3",
+      "io.get-coursier" %% "coursier-jvm" % "2.1.3",
       "io.get-coursier.jniutils" % "windows-jni-utils-coursierapi" % "0.3.3",
-      "org.slf4j" % "slf4j-api" % "2.0.3" // no need to shade that one…
+      "org.slf4j" % "slf4j-api" % "1.7.36" // no need to shade that one…
     ),
 
     libraryDependencies += "com.lihaoyi" %% "utest" % "0.8.1" % Test,
@@ -282,7 +282,7 @@ lazy val `interface-test` = project
           org % name % v
         case None =>
           // only dependency of coursier-interface
-          "org.slf4j" % "slf4j-api" % "2.0.3"
+          "org.slf4j" % "slf4j-api" % "2.0.7"
       }
     },
     Test / unmanagedClasspath ++= Def.taskDyn {
