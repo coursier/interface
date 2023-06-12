@@ -112,13 +112,10 @@ object ApiHelper {
       .map(e => (Organization(e.getKey), ModuleName(e.getValue)))
       .toSet
     val configuration = Configuration(dep.getConfiguration)
-    val tpe = Type(dep.getType)
-    val classifier = Classifier(dep.getClassifier)
 
     val dep0 = Dependency(module0, dep.getVersion)
       .withExclusions(exclusions)
       .withConfiguration(configuration)
-      .withAttributes(Attributes(tpe, classifier))
       .withTransitive(dep.isTransitive)
 
     Option(dep.getPublication)

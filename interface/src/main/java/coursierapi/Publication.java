@@ -60,6 +60,10 @@ public final class Publication implements Serializable {
         return new Publication(this.name, this.type, this.extension, updatedClassifier);
     }
 
+    public boolean isEmpty() {
+        return name.isEmpty() && type.isEmpty() && extension.isEmpty() && classifier.isEmpty();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o)
