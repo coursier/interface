@@ -11,8 +11,6 @@ public final class Dependency implements Serializable {
     private String version;
     private final Set<Map.Entry<String, String>> exclusions;
     private String configuration;
-    private String type;
-    private String classifier;
     private Publication publication;
     private boolean transitive;
 
@@ -22,8 +20,6 @@ public final class Dependency implements Serializable {
         this.version = version;
         this.exclusions = new HashSet<>();
         this.configuration = "";
-        this.type = "";
-        this.classifier = "";
         this.publication = null;
         this.transitive = true;
     }
@@ -76,12 +72,22 @@ public final class Dependency implements Serializable {
     }
 
     public Dependency withType(String type) {
-        this.type = type;
+        if (publication == null)
+          publication = new Publication("", type, "", "");
+        else
+          publication = publication.withType(type);
+        if (publication.isEmpty())
+          publication = null;
         return this;
     }
 
     public Dependency withClassifier(String classifier) {
-        this.classifier = classifier;
+        if (publication == null)
+          publication = new Publication("", "", "", classifier);
+        else
+          publication = publication.withClassifier(classifier);
+        if (publication.isEmpty())
+          publication = null;
         return this;
     }
 
@@ -105,8 +111,6 @@ public final class Dependency implements Serializable {
                     this.version.equals(other.version) &&
                     this.exclusions.equals(other.exclusions) &&
                     this.configuration.equals(other.configuration) &&
-                    this.type.equals(other.type) &&
-                    this.classifier.equals(other.classifier) &&
                     Objects.equals(this.publication, other.publication) &&
                     this.transitive == other.transitive;
         }
@@ -115,7 +119,7 @@ public final class Dependency implements Serializable {
 
     @Override
     public int hashCode() {
-        return 37 * (37 * (37 * (37 * (37 * (37 * (37 * (17 + module.hashCode()) + version.hashCode()) + exclusions.hashCode()) + configuration.hashCode()) + type.hashCode()) + classifier.hashCode()) + Objects.hashCode(publication)) + Boolean.hashCode(transitive);
+        return 37 * (37 * (37 * (37 * (37 * (17 + module.hashCode()) + version.hashCode()) + exclusions.hashCode()) + configuration.hashCode()) + Objects.hashCode(publication)) + Boolean.hashCode(transitive);
     }
 
     @Override
@@ -135,14 +139,6 @@ public final class Dependency implements Serializable {
         if (!configuration.isEmpty()) {
             b.append(", configuration=");
             b.append(configuration);
-        }
-        if (!type.isEmpty()) {
-            b.append(", type=");
-            b.append(type);
-        }
-        if (!classifier.isEmpty()) {
-            b.append(", classifier=");
-            b.append(classifier);
         }
         if (publication != null) {
             b.append(", publication=");
@@ -173,11 +169,13 @@ public final class Dependency implements Serializable {
     }
 
     public String getType() {
-        return type;
+        if (publication == null) return "";
+        return publication.getType();
     }
 
     public String getClassifier() {
-        return classifier;
+        if (publication == null) return "";
+        return publication.getClassifier();
     }
 
     public Publication getPublication() {
