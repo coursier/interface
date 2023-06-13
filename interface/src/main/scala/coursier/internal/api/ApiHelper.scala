@@ -1,6 +1,7 @@
 package coursier.internal.api
 
 import java.io.{File, OutputStreamWriter}
+import java.lang.{Long => JLong}
 import java.time.LocalDateTime
 import java.{util => ju}
 import java.util.concurrent.ExecutorService
@@ -227,6 +228,43 @@ object ApiHelper {
         }
       case w: WrappedLogger =>
         w.getLogger
+      case c: coursierapi.CacheLogger =>
+        new CacheLogger {
+          override def downloadingArtifact(url: String, artifact: Artifact): Unit =
+            c.downloadingArtifact(url, ApiHelper.artifact(artifact))
+          override def foundLocally(url: String): Unit =
+            c.foundLocally(url)
+          override def gettingLength(url: String): Unit =
+            c.gettingLength(url)
+
+          override def init(sizeHint: Option[Int]): Unit =
+            c.init(sizeHint.map(x => x: Integer).orNull)
+          override def stop(): Unit =
+            c.stop()
+
+          override def checkingArtifact(url: String, artifact: Artifact): Unit =
+            c.checkingArtifact(url, ApiHelper.artifact(artifact))
+          override def checkingUpdates(url: String, currentTimeOpt: Option[Long]): Unit =
+            c.checkingUpdates(url, currentTimeOpt.map(x => x: JLong).orNull)
+          override def checkingUpdatesResult(url: String, currentTimeOpt: Option[Long], remoteTimeOpt: Option[Long]): Unit =
+            c.checkingUpdatesResult(url, currentTimeOpt.map(x => x: JLong).orNull, remoteTimeOpt.map(x => x: JLong).orNull)
+
+          override def downloadedArtifact(url: String, success: Boolean): Unit =
+            c.downloadedArtifact(url, success)
+          override def downloadLength(url: String, totalLength: Long, alreadyDownloaded: Long, watching: Boolean): Unit =
+            c.downloadLength(url, totalLength, alreadyDownloaded, watching)
+          override def downloadProgress(url: String, downloaded: Long): Unit =
+            c.downloadProgress(url, downloaded)
+
+          override def gettingLengthResult(url: String, length: Option[Long]): Unit =
+            c.gettingLengthResult(url, length.map(x => x: JLong).orNull)
+
+          override def pickedModuleVersion(module: String, version: String): Unit =
+            c.pickedModuleVersion(module, version)
+
+          override def removedCorruptFile(url: String, reason: Option[String]): Unit =
+            c.removedCorruptFile(url, reason.orNull)
+        }
     }
 
     FileCache()
