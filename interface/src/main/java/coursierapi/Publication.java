@@ -44,6 +44,26 @@ public final class Publication implements Serializable {
         return classifier;
     }
 
+    public Publication withName(String updatedName) {
+        return new Publication(updatedName, this.type, this.extension, this.classifier);
+    }
+
+    public Publication withType(String updatedType) {
+        return new Publication(this.name, updatedType, this.extension, this.classifier);
+    }
+
+    public Publication withExtension(String updatedExtension) {
+        return new Publication(this.name, this.type, updatedExtension, this.classifier);
+    }
+
+    public Publication withClassifier(String updatedClassifier) {
+        return new Publication(this.name, this.type, this.extension, updatedClassifier);
+    }
+
+    public boolean isEmpty() {
+        return name.isEmpty() && type.isEmpty() && extension.isEmpty() && classifier.isEmpty();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o)
