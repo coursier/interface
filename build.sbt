@@ -110,7 +110,7 @@ lazy val interface = project
       dest
     },
     addArtifact(Compile / packageBin / artifact, finalPackageBin),
-    Proguard / proguardVersion := "7.4.0",
+    Proguard / proguardVersion := "7.6.0",
     Proguard / proguardOptions ++= {
       val baseOptions = Seq(
         "-dontnote",
@@ -187,13 +187,13 @@ lazy val interface = project
     Settings.shared,
     Settings.mima(),
     libraryDependencies ++= Seq(
-      "io.get-coursier" %% "coursier" % "2.1.7",
-      "io.get-coursier" %% "coursier-jvm" % "2.1.7",
+      "io.get-coursier" %% "coursier" % "2.1.14",
+      "io.get-coursier" %% "coursier-jvm" % "2.1.14",
       "io.get-coursier.jniutils" % "windows-jni-utils-coursierapi" % "0.3.3",
       "org.slf4j" % "slf4j-api" % "1.7.36" // no need to shade that one…
     ),
 
-    libraryDependencies += "com.lihaoyi" %% "utest" % "0.8.2" % Test,
+    libraryDependencies += "com.lihaoyi" %% "utest" % "0.8.4" % Test,
     testFrameworks += new TestFramework("utest.runner.Framework"),
 
     mimaBinaryIssueFilters ++= Seq(
@@ -251,7 +251,7 @@ lazy val interpolators = project
     Settings.mima(no213 = true),
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided,
-      "com.lihaoyi" %% "utest" % "0.8.2" % Test
+      "com.lihaoyi" %% "utest" % "0.8.4" % Test
     ),
     testFrameworks += new TestFramework("utest.runner.Framework"),
 
@@ -282,7 +282,7 @@ lazy val `interface-test` = project
           org % name % v
         case None =>
           // only dependency of coursier-interface
-          "org.slf4j" % "slf4j-api" % "2.0.9"
+          "org.slf4j" % "slf4j-api" % "2.0.16"
       }
     },
     Test / unmanagedClasspath ++= Def.taskDyn {
