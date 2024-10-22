@@ -1,4 +1,4 @@
-addSbtPlugin("com.github.sbt" % "sbt-ci-release" % "1.8.0")
+addSbtPlugin("com.github.sbt" % "sbt-ci-release" % "1.9.0")
 addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "0.8.1")
 addSbtPlugin("com.lightbend.sbt" % "sbt-proguard" % "0.4.0")
 
