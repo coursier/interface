@@ -9,6 +9,7 @@ import java.util.*;
 public final class Fetch {
 
     private final List<Dependency> dependencies;
+    private final List<Dependency> bomDependencies;
     private final List<Repository> repositories;
     private Cache cache;
     private Boolean mainArtifacts;
@@ -19,6 +20,7 @@ public final class Fetch {
 
     private Fetch() {
         dependencies = new ArrayList<>();
+        bomDependencies = new ArrayList<>();
         repositories = new ArrayList<>(Arrays.asList(ApiHelper.defaultRepositories()));
         cache = Cache.create();
         mainArtifacts = null;
@@ -34,6 +36,7 @@ public final class Fetch {
         if (!(o instanceof Fetch)) return false;
         Fetch fetch = (Fetch) o;
         return Objects.equals(dependencies, fetch.dependencies) &&
+                Objects.equals(bomDependencies, fetch.bomDependencies) &&
                 Objects.equals(repositories, fetch.repositories) &&
                 Objects.equals(cache, fetch.cache) &&
                 Objects.equals(mainArtifacts, fetch.mainArtifacts) &&
@@ -47,6 +50,7 @@ public final class Fetch {
     public int hashCode() {
         return Objects.hash(
                 dependencies,
+                bomDependencies,
                 repositories,
                 cache,
                 mainArtifacts,
@@ -60,6 +64,7 @@ public final class Fetch {
     public String toString() {
         return "Fetch{" +
                 "dependencies=" + dependencies +
+                ", bomDependencies=" + bomDependencies +
                 ", repositories=" + repositories +
                 ", cache=" + cache +
                 ", mainArtifacts=" + mainArtifacts +
@@ -83,6 +88,17 @@ public final class Fetch {
     public Fetch withDependencies(Dependency... dependencies) {
         this.dependencies.clear();
         this.dependencies.addAll(Arrays.asList(dependencies));
+        return this;
+    }
+
+    public Fetch addBomDependencies(Dependency... bomDependencies) {
+        this.bomDependencies.addAll(Arrays.asList(bomDependencies));
+        return this;
+    }
+
+    public Fetch withBomDependencies(Dependency... bomDependencies) {
+        this.bomDependencies.clear();
+        this.bomDependencies.addAll(Arrays.asList(bomDependencies));
         return this;
     }
 
@@ -168,6 +184,10 @@ public final class Fetch {
 
     public List<Dependency> getDependencies() {
         return Collections.unmodifiableList(dependencies);
+    }
+
+    public List<Dependency> getBomDependencies() {
+        return Collections.unmodifiableList(bomDependencies);
     }
 
     public List<Repository> getRepositories() {
