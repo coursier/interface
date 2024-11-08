@@ -55,6 +55,7 @@ lazy val interface = project
           rename("org.fusesource.**", "coursierapi.shaded.org.fusesource.@1"),
           rename("io.github.alexarchambault.windowsansi.**", "coursierapi.shaded.windowsansi.@1"),
           rename("concurrentrefhashmap.**", "coursierapi.shaded.concurrentrefhashmap.@1"),
+          rename("org.apache.commons.codec.**", "coursierapi.shaded.commonscodec.@1"),
           rename("org.apache.commons.compress.**", "coursierapi.shaded.commonscompress.@1"),
           rename("org.apache.commons.io.**", "coursierapi.shaded.commonsio.@1"),
           rename("org.codehaus.plexus.**", "coursierapi.shaded.plexus.@1"),
@@ -187,8 +188,8 @@ lazy val interface = project
     Settings.shared,
     Settings.mima(),
     libraryDependencies ++= Seq(
-      "io.get-coursier" %% "coursier" % "2.1.14",
-      "io.get-coursier" %% "coursier-jvm" % "2.1.14",
+      "io.get-coursier" %% "coursier" % "2.1.17",
+      "io.get-coursier" %% "coursier-jvm" % "2.1.17",
       "io.get-coursier.jniutils" % "windows-jni-utils-coursierapi" % "0.3.3",
       "org.slf4j" % "slf4j-api" % "1.7.36" // no need to shade that one…
     ),
