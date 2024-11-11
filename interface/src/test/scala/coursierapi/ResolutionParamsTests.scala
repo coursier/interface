@@ -54,6 +54,20 @@ object ResolutionParamsTests extends TestSuite {
         assert(params != ResolutionParams.create())
         assert(params == params0)
       }
+
+      test {
+        val params = ResolutionParams.create()
+          .withMaxIterations(31)
+          .forceVersion(Module.of("org", "foo"), "1.2")
+          .forceVersion(Module.of("org", "bzz"), "1.3")
+          .withKeepProvidedDependencies(false)
+          .withForceDepMgmtVersions(true)
+          .withEnableDependencyOverrides(true)
+        val params0 = ApiHelper.resolutionParams(ApiHelper.resolutionParams(params))
+
+        assert(params != ResolutionParams.create())
+        assert(params == params0)
+      }
     }
 
   }

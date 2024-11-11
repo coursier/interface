@@ -1,7 +1,7 @@
 package coursier.internal.api
 
 import java.io.{File, OutputStreamWriter}
-import java.lang.{Long => JLong}
+import java.lang.{Boolean => JBoolean, Long => JLong}
 import java.time.LocalDateTime
 import java.{util => ju}
 import java.util.concurrent.ExecutorService
@@ -257,6 +257,9 @@ object ApiHelper {
       .withUseSystemOsInfo(params.useSystemOsInfo)
       .withUseSystemJdkVersion(params.useSystemJdkVersion)
       .withScalaVersion(params.scalaVersionOpt.orNull)
+      .withKeepProvidedDependencies(params.keepProvidedDependencies.map(b => b: JBoolean).orNull)
+      .withForceDepMgmtVersions(params.forceDepMgmtVersions.map(b => b: JBoolean).orNull)
+      .withEnableDependencyOverrides(params.enableDependencyOverrides.map(b => b: JBoolean).orNull)
   }
 
   def resolutionParams(params: coursierapi.ResolutionParams): ResolutionParams = {
@@ -271,6 +274,9 @@ object ApiHelper {
       .withUseSystemOsInfo(params.getUseSystemOsInfo)
       .withUseSystemJdkVersion(params.getUseSystemJdkVersion)
       .withScalaVersionOpt(Option(params.getScalaVersion))
+      .withKeepProvidedDependencies(Option(params.getKeepProvidedDependencies).map(b => b: Boolean))
+      .withForceDepMgmtVersions(Option(params.getForceDepMgmtVersions).map(b => b: Boolean))
+      .withEnableDependencyOverrides(Option(params.getEnableDependencyOverrides).map(b => b: Boolean))
   }
 
   def cache(cache: coursierapi.Cache): FileCache[Task] = {

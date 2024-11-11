@@ -13,6 +13,9 @@ public class ResolutionParams implements Serializable {
     private boolean useSystemOsInfo;
     private boolean useSystemJdkVersion;
     private String scalaVersion;
+    private Boolean keepProvidedDependencies;
+    private Boolean forceDepMgmtVersions;
+    private Boolean enableDependencyOverrides;
 
     private ResolutionParams() {
         maxIterations = null;
@@ -23,6 +26,9 @@ public class ResolutionParams implements Serializable {
         useSystemOsInfo = true;
         useSystemJdkVersion = true;
         scalaVersion = null;
+        keepProvidedDependencies = null;
+        forceDepMgmtVersions = null;
+        enableDependencyOverrides = null;
     }
 
     @Override
@@ -37,7 +43,10 @@ public class ResolutionParams implements Serializable {
                 Objects.equals(forcedProperties, that.forcedProperties) &&
                 Objects.equals(profiles, that.profiles) &&
                 Objects.equals(exclusions, that.exclusions) &&
-                Objects.equals(scalaVersion, that.scalaVersion);
+                Objects.equals(scalaVersion, that.scalaVersion) &&
+                Objects.equals(keepProvidedDependencies, that.keepProvidedDependencies) &&
+                Objects.equals(forceDepMgmtVersions, that.forceDepMgmtVersions) &&
+                Objects.equals(enableDependencyOverrides, that.enableDependencyOverrides);
     }
 
     @Override
@@ -50,7 +59,10 @@ public class ResolutionParams implements Serializable {
                 exclusions,
                 useSystemOsInfo,
                 useSystemJdkVersion,
-                scalaVersion);
+                scalaVersion,
+                keepProvidedDependencies,
+                forceDepMgmtVersions,
+                enableDependencyOverrides);
     }
 
     @Override
@@ -64,6 +76,9 @@ public class ResolutionParams implements Serializable {
                 ", useSystemOsInfo=" + useSystemOsInfo +
                 ", useSystemJdkVersion=" + useSystemJdkVersion +
                 ", scalaVersion='" + scalaVersion + '\'' +
+                ", keepProvidedDependencies=" + keepProvidedDependencies +
+                ", forceDepMgmtVersions=" + forceDepMgmtVersions +
+                ", enableDependencyOverrides=" + enableDependencyOverrides +
                 '}';
     }
 
@@ -80,7 +95,10 @@ public class ResolutionParams implements Serializable {
                 .withExclusions(params.exclusions)
                 .withUseSystemOsInfo(params.useSystemOsInfo)
                 .withUseSystemJdkVersion(params.useSystemJdkVersion)
-                .withScalaVersion(params.scalaVersion);
+                .withScalaVersion(params.scalaVersion)
+                .withKeepProvidedDependencies(params.keepProvidedDependencies)
+                .withForceDepMgmtVersions(params.forceDepMgmtVersions)
+                .withEnableDependencyOverrides(params.enableDependencyOverrides);
     }
 
     public ResolutionParams withMaxIterations(Integer maxIterations) {
@@ -164,6 +182,21 @@ public class ResolutionParams implements Serializable {
         return this;
     }
 
+    public ResolutionParams withKeepProvidedDependencies(Boolean keepProvidedDependencies) {
+        this.keepProvidedDependencies = keepProvidedDependencies;
+        return this;
+    }
+
+    public ResolutionParams withForceDepMgmtVersions(Boolean forceDepMgmtVersions) {
+        this.forceDepMgmtVersions = forceDepMgmtVersions;
+        return this;
+    }
+
+    public ResolutionParams withEnableDependencyOverrides(Boolean enableDependencyOverrides) {
+        this.enableDependencyOverrides = enableDependencyOverrides;
+        return this;
+    }
+
     public Integer getMaxIterations() {
         return maxIterations;
     }
@@ -194,5 +227,17 @@ public class ResolutionParams implements Serializable {
 
     public String getScalaVersion() {
         return scalaVersion;
+    }
+
+    public Boolean getKeepProvidedDependencies() {
+        return keepProvidedDependencies;
+    }
+
+    public Boolean getForceDepMgmtVersions() {
+        return forceDepMgmtVersions;
+    }
+
+    public Boolean getEnableDependencyOverrides() {
+        return enableDependencyOverrides;
     }
 }
