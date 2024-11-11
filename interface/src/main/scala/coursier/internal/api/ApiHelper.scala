@@ -9,7 +9,7 @@ import coursier._
 import coursierapi.{Credentials, Logger, SimpleLogger}
 import coursier.cache.loggers.RefreshLogger
 import coursier.cache.{ArchiveCache, CacheDefaults, CacheLogger, FileCache, UnArchiver}
-import coursier.core.{Authentication, Configuration, Extension, Publication, Version}
+import coursier.core.{Authentication, Configuration, DependencyManagement, Extension, MinimizedExclusions, Publication, Version}
 import coursier.error.{CoursierError, FetchError, ResolutionError}
 import coursier.ivy.IvyRepository
 import coursier.jvm.{JavaHome, JvmCache}
@@ -103,6 +103,51 @@ object ApiHelper {
       mod.attributes.asJava
     )
 
+  def depMgmtKey(key: coursierapi.DependencyManagement.Key): DependencyManagement.Key =
+    DependencyManagement.Key(
+      Organization(key.getOrganization),
+      ModuleName(key.getName),
+      Type(key.getType),
+      Classifier(key.getClassifier)
+    )
+  def depMgmtKey(key: DependencyManagement.Key): coursierapi.DependencyManagement.Key =
+    new coursierapi.DependencyManagement.Key(
+      key.organization.value,
+      key.name.value,
+      key.`type`.value,
+      key.classifier.value
+    )
+
+  def depMgmtValues(values: coursierapi.DependencyManagement.Values): DependencyManagement.Values =
+    DependencyManagement.Values(
+      Configuration(values.getConfiguration),
+      values.getVersion,
+      MinimizedExclusions(
+        values.getExclusions.asScala
+          .map { e =>
+            (Organization(e.getKey), ModuleName(e.getValue))
+          }
+          .toSet
+      ),
+      values.isOptional
+    )
+  def depMgmtValues(values: DependencyManagement.Values): coursierapi.DependencyManagement.Values = {
+    val apiValues = new coursierapi.DependencyManagement.Values(
+      values.config.value,
+      values.version,
+      values.optional
+    )
+    apiValues.withExclusions(
+      values.minimizedExclusions.toSeq()
+        .map {
+          case (org, name) =>
+            new ju.AbstractMap.SimpleImmutableEntry(org.value, name.value): ju.Map.Entry[String, String]
+        }
+        .toSet
+        .asJava
+    )
+  }
+
   def dependency(dep: coursierapi.Dependency): Dependency = {
 
     val module0 = module(dep.getModule)
@@ -118,6 +163,14 @@ object ApiHelper {
       .withExclusions(exclusions)
       .withConfiguration(configuration)
       .withTransitive(dep.isTransitive)
+      .withOverrides(
+        dep.getOverrides.asScala
+          .map {
+            case (key, values) =>
+              (depMgmtKey(key), depMgmtValues(values))
+          }
+          .toMap
+      )
 
     Option(dep.getPublication)
       .map { p =>
@@ -146,6 +199,14 @@ object ApiHelper {
           .asJava
       )
       .withTransitive(dep.transitive)
+      .withOverrides(
+        dep.overrides
+          .map {
+            case (key, values) =>
+              (depMgmtKey(key), depMgmtValues(values))
+          }
+          .asJava
+      )
 
   def repository(repo: coursierapi.Repository): Repository =
     repo match {
@@ -294,6 +355,12 @@ object ApiHelper {
       .map(dependency)
       .toVector
 
+    val bomDependencies = fetch
+      .getBomDependencies
+      .asScala
+      .map(dependency)
+      .toVector
+
     val repositories = fetch
       .getRepositories
       .asScala
@@ -311,17 +378,22 @@ object ApiHelper {
 
     val params = resolutionParams(fetch.getResolutionParams)
 
-    var f = Fetch()
+    // temporarily creating a Resolve and and Artifacts manually,
+    // to work around missing BOM-related methods on Fetch
+    val resolve = Resolve()
       .withDependencies(dependencies)
+      .withBomDependencies(bomDependencies)
       .withRepositories(repositories)
       .withCache(cache0)
+      .withResolutionParams(params)
+    var artifacts = Artifacts()
       .withMainArtifacts(fetch.getMainArtifacts)
       .withClassifiers(classifiers)
-      .withFetchCache(Option(fetch.getFetchCacheIKnowWhatImDoing))
-      .withResolutionParams(params)
     if (fetch.getArtifactTypes != null)
-      f = f.withArtifactTypes(fetch.getArtifactTypes.asScala.toSet[String].map(Type(_)))
-    f
+      artifacts = artifacts.withArtifactTypes(fetch.getArtifactTypes.asScala.toSet[String].map(Type(_)))
+
+    Fetch(resolve, artifacts, None)
+      .withFetchCache(Option(fetch.getFetchCacheIKnowWhatImDoing))
   }
 
   def fetch(fetch: Fetch[Task]): coursierapi.Fetch = {

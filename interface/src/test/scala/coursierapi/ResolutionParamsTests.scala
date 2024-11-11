@@ -6,7 +6,7 @@ import utest._
 object ResolutionParamsTests extends TestSuite {
 
   val tests = Tests {
-    'simple - {
+    test("simple") {
       val params = ResolutionParams.create()
         .withMaxIterations(31)
         .forceVersion(Module.of("org", "foo"), "1.2")
@@ -18,8 +18,8 @@ object ResolutionParamsTests extends TestSuite {
       assert(params == params0)
     }
 
-    'other - {
-      * - {
+    test("other") {
+      test {
         val params = ResolutionParams.create()
           .withMaxIterations(31)
           .forceVersion(Module.of("org", "foo"), "1.2")
@@ -36,7 +36,7 @@ object ResolutionParamsTests extends TestSuite {
         assert(params == params0)
       }
 
-      * - {
+      test {
         val params = ResolutionParams.create()
           .withMaxIterations(31)
           .forceVersion(Module.of("org", "foo"), "1.2")

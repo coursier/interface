@@ -9,6 +9,7 @@ import java.util.*;
 public final class Fetch {
 
     private final List<Dependency> dependencies;
+    private final List<Dependency> bomDependencies;
     private final List<Repository> repositories;
     private Cache cache;
     private Boolean mainArtifacts;
@@ -19,6 +20,7 @@ public final class Fetch {
 
     private Fetch() {
         dependencies = new ArrayList<>();
+        bomDependencies = new ArrayList<>();
         repositories = new ArrayList<>(Arrays.asList(ApiHelper.defaultRepositories()));
         cache = Cache.create();
         mainArtifacts = null;
@@ -29,70 +31,48 @@ public final class Fetch {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof Fetch) {
-            Fetch other = (Fetch) obj;
-            return this.dependencies.equals(other.dependencies) &&
-                    this.repositories.equals(other.repositories) &&
-                    this.cache.equals(other.cache) &&
-                    Objects.equals(this.mainArtifacts, other.mainArtifacts) &&
-                    this.classifiers.equals(other.classifiers) &&
-                    Objects.equals(this.artifactTypes, other.artifactTypes) &&
-                    Objects.equals(this.fetchCache, other.fetchCache) &&
-                    this.resolutionParams.equals(other.resolutionParams);
-        }
-        return false;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Fetch)) return false;
+        Fetch fetch = (Fetch) o;
+        return Objects.equals(dependencies, fetch.dependencies) &&
+                Objects.equals(bomDependencies, fetch.bomDependencies) &&
+                Objects.equals(repositories, fetch.repositories) &&
+                Objects.equals(cache, fetch.cache) &&
+                Objects.equals(mainArtifacts, fetch.mainArtifacts) &&
+                Objects.equals(classifiers, fetch.classifiers) &&
+                Objects.equals(artifactTypes, fetch.artifactTypes) &&
+                Objects.equals(fetchCache, fetch.fetchCache) &&
+                Objects.equals(resolutionParams, fetch.resolutionParams);
     }
 
     @Override
     public int hashCode() {
-        return 37 * (37 * (37 * (37 * (37 * (37 * (37 * (17 + dependencies.hashCode()) + repositories.hashCode()) + cache.hashCode()) + Objects.hashCode(mainArtifacts)) + classifiers.hashCode()) + Objects.hashCode(fetchCache)) + resolutionParams.hashCode()) + Objects.hashCode(artifactTypes);
+        return Objects.hash(
+                dependencies,
+                bomDependencies,
+                repositories,
+                cache,
+                mainArtifacts,
+                classifiers,
+                artifactTypes,
+                fetchCache,
+                resolutionParams);
     }
 
     @Override
     public String toString() {
-        StringBuilder b = new StringBuilder("Fetch(dependencies=[");
-        for (Dependency dep : dependencies) {
-            b.append(dep.toString());
-            b.append(", ");
-        }
-        b.append("], repositories=[");
-        for (Repository repo : repositories) {
-            b.append(repo.toString());
-            b.append(", ");
-        }
-        b.append("], cache=");
-        b.append(cache.toString());
-        if (mainArtifacts != null) {
-            b.append(", mainArtifacts=");
-            b.append(mainArtifacts.toString());
-        }
-        b.append(", classifiers=[");
-        for (String cl : classifiers) {
-            b.append(cl);
-            b.append(", ");
-        }
-        b.append("]");
-        if (artifactTypes != null) {
-            b.append(", artifactTypes=[");
-            boolean first = true;
-            for (String t : artifactTypes) {
-                if (first)
-                    first = false;
-                else
-                    b.append(", ");
-                b.append(t);
-            }
-            b.append("]");
-        }
-        if (fetchCache != null) {
-            b.append(", fetchCache=");
-            b.append(fetchCache.toString());
-        }
-        b.append(", resolutionParams=");
-        b.append(resolutionParams.toString());
-        b.append(")");
-        return b.toString();
+        return "Fetch{" +
+                "dependencies=" + dependencies +
+                ", bomDependencies=" + bomDependencies +
+                ", repositories=" + repositories +
+                ", cache=" + cache +
+                ", mainArtifacts=" + mainArtifacts +
+                ", classifiers=" + classifiers +
+                ", artifactTypes=" + artifactTypes +
+                ", fetchCache=" + fetchCache +
+                ", resolutionParams=" + resolutionParams +
+                '}';
     }
 
     public static Fetch create() {
@@ -108,6 +88,17 @@ public final class Fetch {
     public Fetch withDependencies(Dependency... dependencies) {
         this.dependencies.clear();
         this.dependencies.addAll(Arrays.asList(dependencies));
+        return this;
+    }
+
+    public Fetch addBomDependencies(Dependency... bomDependencies) {
+        this.bomDependencies.addAll(Arrays.asList(bomDependencies));
+        return this;
+    }
+
+    public Fetch withBomDependencies(Dependency... bomDependencies) {
+        this.bomDependencies.clear();
+        this.bomDependencies.addAll(Arrays.asList(bomDependencies));
         return this;
     }
 
@@ -193,6 +184,10 @@ public final class Fetch {
 
     public List<Dependency> getDependencies() {
         return Collections.unmodifiableList(dependencies);
+    }
+
+    public List<Dependency> getBomDependencies() {
+        return Collections.unmodifiableList(bomDependencies);
     }
 
     public List<Repository> getRepositories() {
