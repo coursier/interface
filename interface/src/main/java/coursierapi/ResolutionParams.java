@@ -26,126 +26,45 @@ public class ResolutionParams implements Serializable {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof ResolutionParams) {
-            ResolutionParams other = (ResolutionParams) obj;
-            return Objects.equals(this.maxIterations, other.maxIterations) &&
-                    this.forcedProperties.equals(other.forcedProperties) &&
-                    this.profiles.equals(other.profiles) && this.exclusions.equals(other.exclusions) &&
-                    Objects.equals(this.useSystemOsInfo, other.useSystemOsInfo) &&
-                    Objects.equals(this.useSystemJdkVersion, other.useSystemJdkVersion) &&
-                    Objects.equals(this.scalaVersion, other.scalaVersion);
-        }
-        return false;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ResolutionParams)) return false;
+        ResolutionParams that = (ResolutionParams) o;
+        return useSystemOsInfo == that.useSystemOsInfo &&
+                useSystemJdkVersion == that.useSystemJdkVersion &&
+                Objects.equals(maxIterations, that.maxIterations) &&
+                Objects.equals(forceVersions, that.forceVersions) &&
+                Objects.equals(forcedProperties, that.forcedProperties) &&
+                Objects.equals(profiles, that.profiles) &&
+                Objects.equals(exclusions, that.exclusions) &&
+                Objects.equals(scalaVersion, that.scalaVersion);
     }
 
     @Override
     public int hashCode() {
-        return 37 * (37 * (37 * (37 * (37 * (37 * (37 * (17 + Objects.hashCode(maxIterations)) + forceVersions.hashCode()) + forcedProperties.hashCode()) + profiles.hashCode()) + exclusions.hashCode()) + Boolean.hashCode(useSystemOsInfo)) + Boolean.hashCode(useSystemJdkVersion)) + Objects.hashCode(scalaVersion);
+        return Objects.hash(
+                maxIterations,
+                forceVersions,
+                forcedProperties,
+                profiles,
+                exclusions,
+                useSystemOsInfo,
+                useSystemJdkVersion,
+                scalaVersion);
     }
 
     @Override
     public String toString() {
-        StringBuilder b = new StringBuilder("ResolutionParams(");
-        boolean needSep = false;
-        if (maxIterations != null) {
-            b.append("maxIterations=");
-            b.append(maxIterations.toString());
-            needSep = true;
-        }
-        if (!forceVersions.isEmpty()) {
-            if (needSep)
-                b.append(", ");
-            else
-                needSep = true;
-
-            b.append("forceVersions=[");
-            boolean first = true;
-            for (Map.Entry<Module, String> e : forceVersions.entrySet()) {
-                if (first)
-                    first = false;
-                else
-                    b.append(", ");
-                b.append(e.getKey().toString());
-                b.append(":");
-                b.append(e.getValue());
-            }
-            b.append("]");
-        }
-        if (!forcedProperties.isEmpty()) {
-            if (needSep)
-                b.append(", ");
-            else
-                needSep = true;
-
-            b.append("forcedProperties=[");
-            boolean first = true;
-            for (Map.Entry<String, String> e : forcedProperties.entrySet()) {
-                if (first)
-                    first = false;
-                else
-                    b.append(", ");
-                b.append(e.getKey());
-                b.append("=");
-                b.append(e.getValue());
-            }
-            b.append("]");
-        }
-        if (!profiles.isEmpty()) {
-            if (needSep)
-                b.append(", ");
-            else
-                needSep = true;
-
-            b.append("profiles=[");
-            boolean first = true;
-            for (String profile : profiles) {
-                if (first)
-                    first = false;
-                else
-                    b.append(", ");
-                b.append(profile);
-            }
-            b.append("]");
-        }
-        if (!exclusions.isEmpty()) {
-            if (needSep)
-                b.append(", ");
-            else
-                needSep = true;
-
-            b.append("exclusions=[");
-            boolean first = true;
-            for (Map.Entry<String, String> exclusion : exclusions) {
-                if (first)
-                    first = false;
-                else
-                    b.append(", ");
-                b.append(exclusion.getKey());
-                b.append(":");
-                b.append(exclusion.getValue());
-            }
-            b.append("]");
-        }
-
-        if (needSep)
-            b.append(", ");
-        else
-            needSep = true;
-
-        b.append("useSystemOsInfo=");
-        b.append(useSystemOsInfo);
-
-        b.append("useSystemJdkVersion=");
-        b.append(useSystemJdkVersion);
-
-        if (scalaVersion != null) {
-            b.append(", scalaVersion=");
-            b.append(scalaVersion);
-        }
-
-        b.append(")");
-        return b.toString();
+        return "ResolutionParams{" +
+                "maxIterations=" + maxIterations +
+                ", forceVersions=" + forceVersions +
+                ", forcedProperties=" + forcedProperties +
+                ", profiles=" + profiles +
+                ", exclusions=" + exclusions +
+                ", useSystemOsInfo=" + useSystemOsInfo +
+                ", useSystemJdkVersion=" + useSystemJdkVersion +
+                ", scalaVersion='" + scalaVersion + '\'' +
+                '}';
     }
 
     public static ResolutionParams create() {
