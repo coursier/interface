@@ -102,53 +102,39 @@ public final class Dependency implements Serializable {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj instanceof Dependency) {
-            Dependency other = (Dependency) obj;
-            return this.module.equals(other.module) &&
-                    this.version.equals(other.version) &&
-                    this.exclusions.equals(other.exclusions) &&
-                    this.configuration.equals(other.configuration) &&
-                    Objects.equals(this.publication, other.publication) &&
-                    this.transitive == other.transitive;
-        }
-        return false;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Dependency)) return false;
+        Dependency that = (Dependency) o;
+        return transitive == that.transitive &&
+                Objects.equals(module, that.module) &&
+                Objects.equals(version, that.version) &&
+                Objects.equals(exclusions, that.exclusions) &&
+                Objects.equals(configuration, that.configuration) &&
+                Objects.equals(publication, that.publication);
     }
 
     @Override
     public int hashCode() {
-        return 37 * (37 * (37 * (37 * (37 * (17 + module.hashCode()) + version.hashCode()) + exclusions.hashCode()) + configuration.hashCode()) + Objects.hashCode(publication)) + Boolean.hashCode(transitive);
+        return Objects.hash(
+                module,
+                version,
+                exclusions,
+                configuration,
+                publication,
+                transitive);
     }
 
     @Override
     public String toString() {
-        StringBuilder b = new StringBuilder("Dependency(");
-        b.append(module.toString());
-        b.append(", ");
-        b.append(version);
-        if (!exclusions.isEmpty()) {
-            for (Map.Entry<String, String> e : exclusions) {
-                b.append(", exclude=");
-                b.append(e.getKey());
-                b.append(":");
-                b.append(e.getValue());
-            }
-        }
-        if (!configuration.isEmpty()) {
-            b.append(", configuration=");
-            b.append(configuration);
-        }
-        if (publication != null) {
-            b.append(", publication=");
-            b.append(publication);
-        }
-        if (!transitive) {
-            b.append(", intransitive");
-        }
-        b.append(")");
-        return b.toString();
+        return "Dependency{" +
+                "module=" + module +
+                ", version='" + version + '\'' +
+                ", exclusions=" + exclusions +
+                ", configuration='" + configuration + '\'' +
+                ", publication=" + publication +
+                ", transitive=" + transitive +
+                '}';
     }
 
 

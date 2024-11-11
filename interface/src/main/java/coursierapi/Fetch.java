@@ -29,70 +29,45 @@ public final class Fetch {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof Fetch) {
-            Fetch other = (Fetch) obj;
-            return this.dependencies.equals(other.dependencies) &&
-                    this.repositories.equals(other.repositories) &&
-                    this.cache.equals(other.cache) &&
-                    Objects.equals(this.mainArtifacts, other.mainArtifacts) &&
-                    this.classifiers.equals(other.classifiers) &&
-                    Objects.equals(this.artifactTypes, other.artifactTypes) &&
-                    Objects.equals(this.fetchCache, other.fetchCache) &&
-                    this.resolutionParams.equals(other.resolutionParams);
-        }
-        return false;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Fetch)) return false;
+        Fetch fetch = (Fetch) o;
+        return Objects.equals(dependencies, fetch.dependencies) &&
+                Objects.equals(repositories, fetch.repositories) &&
+                Objects.equals(cache, fetch.cache) &&
+                Objects.equals(mainArtifacts, fetch.mainArtifacts) &&
+                Objects.equals(classifiers, fetch.classifiers) &&
+                Objects.equals(artifactTypes, fetch.artifactTypes) &&
+                Objects.equals(fetchCache, fetch.fetchCache) &&
+                Objects.equals(resolutionParams, fetch.resolutionParams);
     }
 
     @Override
     public int hashCode() {
-        return 37 * (37 * (37 * (37 * (37 * (37 * (37 * (17 + dependencies.hashCode()) + repositories.hashCode()) + cache.hashCode()) + Objects.hashCode(mainArtifacts)) + classifiers.hashCode()) + Objects.hashCode(fetchCache)) + resolutionParams.hashCode()) + Objects.hashCode(artifactTypes);
+        return Objects.hash(
+                dependencies,
+                repositories,
+                cache,
+                mainArtifacts,
+                classifiers,
+                artifactTypes,
+                fetchCache,
+                resolutionParams);
     }
 
     @Override
     public String toString() {
-        StringBuilder b = new StringBuilder("Fetch(dependencies=[");
-        for (Dependency dep : dependencies) {
-            b.append(dep.toString());
-            b.append(", ");
-        }
-        b.append("], repositories=[");
-        for (Repository repo : repositories) {
-            b.append(repo.toString());
-            b.append(", ");
-        }
-        b.append("], cache=");
-        b.append(cache.toString());
-        if (mainArtifacts != null) {
-            b.append(", mainArtifacts=");
-            b.append(mainArtifacts.toString());
-        }
-        b.append(", classifiers=[");
-        for (String cl : classifiers) {
-            b.append(cl);
-            b.append(", ");
-        }
-        b.append("]");
-        if (artifactTypes != null) {
-            b.append(", artifactTypes=[");
-            boolean first = true;
-            for (String t : artifactTypes) {
-                if (first)
-                    first = false;
-                else
-                    b.append(", ");
-                b.append(t);
-            }
-            b.append("]");
-        }
-        if (fetchCache != null) {
-            b.append(", fetchCache=");
-            b.append(fetchCache.toString());
-        }
-        b.append(", resolutionParams=");
-        b.append(resolutionParams.toString());
-        b.append(")");
-        return b.toString();
+        return "Fetch{" +
+                "dependencies=" + dependencies +
+                ", repositories=" + repositories +
+                ", cache=" + cache +
+                ", mainArtifacts=" + mainArtifacts +
+                ", classifiers=" + classifiers +
+                ", artifactTypes=" + artifactTypes +
+                ", fetchCache=" + fetchCache +
+                ", resolutionParams=" + resolutionParams +
+                '}';
     }
 
     public static Fetch create() {
