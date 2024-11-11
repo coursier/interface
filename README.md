@@ -2,10 +2,10 @@
 
 *Zero-dependency Java API for coursier*
 
-[![Build Status](https://travis-ci.org/coursier/interface.svg?branch=master)](https://travis-ci.org/coursier/interface)
+[![CI](https://github.com/coursier/interface/actions/workflows/ci.yml/badge.svg)](https://github.com/coursier/interface/actions/workflows/ci.yml)
 [![Join the chat at https://gitter.im/coursier/coursier](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/coursier/coursier?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Maven Central](https://img.shields.io/maven-central/v/io.get-coursier/interface.svg)](https://maven-badges.herokuapp.com/maven-central/io.get-coursier/interface)
-[![Scaladoc](https://javadoc-badge.appspot.com/io.get-coursier/interface.svg?label=scaladoc)](https://javadoc-badge.appspot.com/io.get-coursier/interface)
+[![javadoc](https://javadoc.io/badge2/io.get-coursier/interface/javadoc.svg)](https://javadoc.io/doc/io.get-coursier/interface)
 
 *coursier-interface* is a zero-dependency Java library, exposing some of the features of the [API of coursier](https://get-coursier.io/docs/api). *coursier-interface* shades coursier, along with all its dependencies, so that it doesn't have any public dependency, and can be safely used along with other Scala or coursier versions.
 
