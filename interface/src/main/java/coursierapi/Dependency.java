@@ -13,6 +13,7 @@ public final class Dependency implements Serializable {
     private String configuration;
     private Publication publication;
     private boolean transitive;
+    private final HashMap<DependencyManagement.Key, DependencyManagement.Values> overrides;
 
 
     private Dependency(Module module, String version) {
@@ -22,6 +23,7 @@ public final class Dependency implements Serializable {
         this.configuration = "";
         this.publication = null;
         this.transitive = true;
+        this.overrides = new HashMap<>();
     }
 
     public static Dependency of(Module module, String version) {
@@ -37,7 +39,8 @@ public final class Dependency implements Serializable {
                 .withType(dependency.getType())
                 .withClassifier(dependency.getClassifier())
                 .withPublication(dependency.getPublication())
-                .withTransitive(dependency.isTransitive());
+                .withTransitive(dependency.isTransitive())
+                .withOverrides(dependency.getOverrides());
     }
 
     public static Dependency parse(String dep, ScalaVersion scalaVersion) {
@@ -101,6 +104,23 @@ public final class Dependency implements Serializable {
         return this;
     }
 
+    public Dependency addOverride(DependencyManagement.Key key, DependencyManagement.Values values) {
+        this.overrides.put(key, values);
+        return this;
+    }
+    public Dependency addOverride(String organization, String name, String version) {
+        this.overrides.put(
+                new DependencyManagement.Key(organization, name, "", ""),
+                new DependencyManagement.Values("", version, false));
+        return this;
+    }
+
+    public Dependency withOverrides(Map<DependencyManagement.Key, DependencyManagement.Values> overrides) {
+        this.overrides.clear();
+        this.overrides.putAll(overrides);
+        return this;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -111,7 +131,8 @@ public final class Dependency implements Serializable {
                 Objects.equals(version, that.version) &&
                 Objects.equals(exclusions, that.exclusions) &&
                 Objects.equals(configuration, that.configuration) &&
-                Objects.equals(publication, that.publication);
+                Objects.equals(publication, that.publication) &&
+                Objects.equals(overrides, that.overrides);
     }
 
     @Override
@@ -122,7 +143,8 @@ public final class Dependency implements Serializable {
                 exclusions,
                 configuration,
                 publication,
-                transitive);
+                transitive,
+                overrides);
     }
 
     @Override
@@ -134,6 +156,7 @@ public final class Dependency implements Serializable {
                 ", configuration='" + configuration + '\'' +
                 ", publication=" + publication +
                 ", transitive=" + transitive +
+                ", overrides=" + overrides +
                 '}';
     }
 
@@ -170,5 +193,9 @@ public final class Dependency implements Serializable {
 
     public boolean isTransitive() {
         return transitive;
+    }
+
+    public Map<DependencyManagement.Key, DependencyManagement.Values> getOverrides() {
+        return Collections.unmodifiableMap(overrides);
     }
 }

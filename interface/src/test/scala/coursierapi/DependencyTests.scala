@@ -59,6 +59,23 @@ object DependencyTests extends TestSuite {
       assert(dep == dep0)
     }
 
+    test("overrides") {
+      val dep = Dependency.of(initialDep)
+        .withTransitive(false)
+        .addOverride("some-org", "some-name", "1.2")
+        .addOverride(
+          new DependencyManagement.Key("other-org", "other-name", "a-type", "a-classifier"),
+          new DependencyManagement.Values("a-config", "1.4", false)
+            .addExclusion("nope-org", "nope-name")
+            .addExclusion("nope-org2", "nope-name2")
+        )
+
+      val dep0 = ApiHelper.dependency(ApiHelper.dependency(dep))
+
+      assert(dep != initialDep)
+      assert(dep == dep0)
+    }
+
   }
 
 }
