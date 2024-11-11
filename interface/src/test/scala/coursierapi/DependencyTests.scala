@@ -9,7 +9,7 @@ object DependencyTests extends TestSuite {
 
     val initialDep = Dependency.of("org", "name", "1.2")
 
-    'exclusions - {
+    test("exclusions") {
       val dep = Dependency.of(initialDep)
         .addExclusion("foo", "*")
 
@@ -19,7 +19,7 @@ object DependencyTests extends TestSuite {
       assert(dep == dep0)
     }
 
-    'configuration - {
+    test("configuration") {
       val dep = Dependency.of(initialDep)
         .withConfiguration("foo")
 
@@ -29,7 +29,7 @@ object DependencyTests extends TestSuite {
       assert(dep == dep0)
     }
 
-    'type - {
+    test("type") {
       val dep = Dependency.of(initialDep)
         .withType("foo")
 
@@ -39,7 +39,7 @@ object DependencyTests extends TestSuite {
       assert(dep == dep0)
     }
 
-    'classifier - {
+    test("classifier") {
       val dep = Dependency.of(initialDep)
         .withClassifier("foo")
 
@@ -49,7 +49,7 @@ object DependencyTests extends TestSuite {
       assert(dep == dep0)
     }
 
-    'transitive - {
+    test("transitive") {
       val dep = Dependency.of(initialDep)
         .withTransitive(false)
 
