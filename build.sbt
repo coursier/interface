@@ -19,6 +19,8 @@ inThisBuild(List(
 
 lazy val finalPackageBin = taskKey[File]("")
 
+lazy val isJava9OrMore = sys.props.get("java.version").exists(!_.startsWith("1."))
+
 lazy val interface = project
   .enablePlugins(SbtProguard)
   .settings(
@@ -121,11 +123,13 @@ lazy val interface = project
         "-keep class coursierapi.** {\n  public protected *;\n}"
       )
 
-      val isJava9OrMore = sys.props.get("java.version").exists(!_.startsWith("1."))
       val maybeJava9Options =
         if (isJava9OrMore) {
           val javaHome = sys.props.getOrElse("java.home", ???)
-          Seq(s"-libraryjars $javaHome/jmods/java.base.jmod")
+          Seq(
+            s"-libraryjars $javaHome/jmods/java.base.jmod",
+            s"-libraryjars $javaHome/jmods/java.xml.jmod"
+          )
         }
         else
           Nil

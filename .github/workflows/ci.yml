@@ -23,7 +23,7 @@ jobs:
     - uses: coursier/cache-action@v6
     - uses: coursier/setup-action@v1.3
       with:
-        jvm: 8
+        jvm: 21
         apps: sbt
     - name: Test
       run: ./.github/scripts/ci.sh
@@ -40,7 +40,7 @@ jobs:
     - uses: coursier/cache-action@v6
     - uses: coursier/setup-action@v1.3
       with:
-        jvm: 8
+        jvm: 21
     - run: .github/scripts/gpg-setup.sh
       shell: bash
       env:
