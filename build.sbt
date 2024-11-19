@@ -54,6 +54,7 @@ lazy val interface = project
         val rules = Seq(
           rename("scala.**", "coursierapi.shaded.scala.@1"),
           rename("coursier.**", "coursierapi.shaded.coursier.@1"),
+          rename("dependency.**", "coursierapi.shaded.dependency.@1"),
           rename("org.fusesource.**", "coursierapi.shaded.org.fusesource.@1"),
           rename("io.github.alexarchambault.windowsansi.**", "coursierapi.shaded.windowsansi.@1"),
           rename("concurrentrefhashmap.**", "coursierapi.shaded.concurrentrefhashmap.@1"),
@@ -192,8 +193,8 @@ lazy val interface = project
     Settings.shared,
     Settings.mima(),
     libraryDependencies ++= Seq(
-      "io.get-coursier" %% "coursier" % "2.1.17",
-      "io.get-coursier" %% "coursier-jvm" % "2.1.17",
+      "io.get-coursier" %% "coursier" % "2.1.18",
+      "io.get-coursier" %% "coursier-jvm" % "2.1.18",
       "io.get-coursier.jniutils" % "windows-jni-utils-coursierapi" % "0.3.3",
       "org.slf4j" % "slf4j-api" % "1.7.36" // no need to shade that one…
     ),
