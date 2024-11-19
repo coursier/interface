@@ -25,11 +25,9 @@ if [ "$IS_UNIX" == "true" ]; then
   sbt \
     'set version in ThisBuild := "'"$TEST_VERSION"'"' \
     publishLocal
-  echo "Running JDK 11 tests…"
-  # test that things work from JDK 11
-  # not actually building things from it, running into weird proguard issues…
+  echo "Running JDK 8 tests…"
 
-  TEST_JDK="adopt:1.11.0-7"
+  TEST_JDK="adoptium:8"
   eval "$(cs java --jvm "$TEST_JDK" --env)"
 
   java -Xmx32m -version
