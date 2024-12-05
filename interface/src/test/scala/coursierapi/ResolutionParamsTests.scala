@@ -30,6 +30,7 @@ object ResolutionParamsTests extends TestSuite {
           .addExclusion("org.scala-lang.modules", "*")
           .withUseSystemOsInfo(false)
           .withUseSystemJdkVersion(false)
+          .withDefaultConfiguration("foo")
         val params0 = ApiHelper.resolutionParams(ApiHelper.resolutionParams(params))
 
         assert(params != ResolutionParams.create())
@@ -49,6 +50,7 @@ object ResolutionParamsTests extends TestSuite {
           .withUseSystemOsInfo(true)
           .withUseSystemJdkVersion(true)
           .withScalaVersion("2.14.3")
+          .withDefaultConfiguration("thing")
         val params0 = ApiHelper.resolutionParams(ApiHelper.resolutionParams(params))
 
         assert(params != ResolutionParams.create())

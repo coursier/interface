@@ -16,6 +16,7 @@ public class ResolutionParams implements Serializable {
     private Boolean keepProvidedDependencies;
     private Boolean forceDepMgmtVersions;
     private Boolean enableDependencyOverrides;
+    private String defaultConfiguration;
 
     private ResolutionParams() {
         maxIterations = null;
@@ -29,6 +30,7 @@ public class ResolutionParams implements Serializable {
         keepProvidedDependencies = null;
         forceDepMgmtVersions = null;
         enableDependencyOverrides = null;
+        defaultConfiguration = null;
     }
 
     @Override
@@ -46,7 +48,8 @@ public class ResolutionParams implements Serializable {
                 Objects.equals(scalaVersion, that.scalaVersion) &&
                 Objects.equals(keepProvidedDependencies, that.keepProvidedDependencies) &&
                 Objects.equals(forceDepMgmtVersions, that.forceDepMgmtVersions) &&
-                Objects.equals(enableDependencyOverrides, that.enableDependencyOverrides);
+                Objects.equals(enableDependencyOverrides, that.enableDependencyOverrides) &&
+                Objects.equals(defaultConfiguration, that.defaultConfiguration);
     }
 
     @Override
@@ -62,7 +65,8 @@ public class ResolutionParams implements Serializable {
                 scalaVersion,
                 keepProvidedDependencies,
                 forceDepMgmtVersions,
-                enableDependencyOverrides);
+                enableDependencyOverrides,
+                defaultConfiguration);
     }
 
     @Override
@@ -79,6 +83,7 @@ public class ResolutionParams implements Serializable {
                 ", keepProvidedDependencies=" + keepProvidedDependencies +
                 ", forceDepMgmtVersions=" + forceDepMgmtVersions +
                 ", enableDependencyOverrides=" + enableDependencyOverrides +
+                ", defaultConfiguration=" + defaultConfiguration +
                 '}';
     }
 
@@ -98,7 +103,8 @@ public class ResolutionParams implements Serializable {
                 .withScalaVersion(params.scalaVersion)
                 .withKeepProvidedDependencies(params.keepProvidedDependencies)
                 .withForceDepMgmtVersions(params.forceDepMgmtVersions)
-                .withEnableDependencyOverrides(params.enableDependencyOverrides);
+                .withEnableDependencyOverrides(params.enableDependencyOverrides)
+                .withDefaultConfiguration(params.defaultConfiguration);
     }
 
     public ResolutionParams withMaxIterations(Integer maxIterations) {
@@ -197,6 +203,11 @@ public class ResolutionParams implements Serializable {
         return this;
     }
 
+    public ResolutionParams withDefaultConfiguration(String defaultConfiguration) {
+        this.defaultConfiguration = defaultConfiguration;
+        return this;
+    }
+
     public Integer getMaxIterations() {
         return maxIterations;
     }
@@ -239,5 +250,9 @@ public class ResolutionParams implements Serializable {
 
     public Boolean getEnableDependencyOverrides() {
         return enableDependencyOverrides;
+    }
+
+    public String getDefaultConfiguration() {
+        return defaultConfiguration;
     }
 }

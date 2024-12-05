@@ -260,6 +260,7 @@ object ApiHelper {
       .withKeepProvidedDependencies(params.keepProvidedDependencies.map(b => b: JBoolean).orNull)
       .withForceDepMgmtVersions(params.forceDepMgmtVersions.map(b => b: JBoolean).orNull)
       .withEnableDependencyOverrides(params.enableDependencyOverrides.map(b => b: JBoolean).orNull)
+      .withDefaultConfiguration(if (params.defaultConfiguration == ResolutionParams().defaultConfiguration) null else params.defaultConfiguration.value)
   }
 
   def resolutionParams(params: coursierapi.ResolutionParams): ResolutionParams = {
@@ -277,6 +278,7 @@ object ApiHelper {
       .withKeepProvidedDependencies(Option(params.getKeepProvidedDependencies).map(b => b: Boolean))
       .withForceDepMgmtVersions(Option(params.getForceDepMgmtVersions).map(b => b: Boolean))
       .withEnableDependencyOverrides(Option(params.getEnableDependencyOverrides).map(b => b: Boolean))
+      .withDefaultConfiguration(Option(params.getDefaultConfiguration).map(Configuration(_)).getOrElse(params0.defaultConfiguration))
   }
 
   def cache(cache: coursierapi.Cache): FileCache[Task] = {
