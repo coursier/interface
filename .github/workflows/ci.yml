@@ -45,6 +45,7 @@ jobs:
       shell: bash
       env:
         PGP_SECRET: ${{ secrets.PUBLISH_SECRET_KEY }}
+    - uses: sbt/setup-sbt@v1
     - name: Release
       run: sbtn ci-release
       env:
