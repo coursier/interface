@@ -41,11 +41,11 @@ jobs:
     - uses: coursier/setup-action@v1.3
       with:
         jvm: 21
+        apps: sbt sbtn
     - run: .github/scripts/gpg-setup.sh
       shell: bash
       env:
         PGP_SECRET: ${{ secrets.PUBLISH_SECRET_KEY }}
-    - uses: sbt/setup-sbt@v1
     - name: Release
       run: sbtn ci-release
       env:
