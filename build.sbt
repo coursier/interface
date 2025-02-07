@@ -65,7 +65,10 @@ lazy val interface = project
           rename("org.tukaani.xz.**", "coursierapi.shaded.xz.@1"),
           rename("org.iq80.snappy.**", "coursierapi.shaded.snappy.@1"),
           rename("com.github.plokhotnyuk.jsoniter_scala.core.**", "coursierapi.shaded.jsoniter.@1"),
-          rename("com.github.luben.zstd.**", "coursierapi.shaded.zstd.@1")
+          rename("com.github.luben.zstd.**", "coursierapi.shaded.zstd.@1"),
+          rename("io.airlift.compress.**", "coursierapi.shaded.compress.@1"),
+          rename("io.github.alexarchambault.isterminal.**", "coursierapi.shaded.isterminal.@1"),
+          rename("org.apache.commons.lang3.**", "coursierapi.shaded.lang3.@1")
         )
 
         val processor = new com.eed3si9n.jarjar.JJProcessor(
