@@ -291,7 +291,7 @@ lazy val `interface-test` = project
           org % name % v
         case None =>
           // only dependency of coursier-interface
-          "org.slf4j" % "slf4j-api" % "2.0.16"
+          "org.slf4j" % "slf4j-api" % "2.0.17"
       }
     },
     Test / unmanagedClasspath ++= Def.taskDyn {
