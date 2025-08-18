@@ -203,7 +203,7 @@ lazy val interface = project
       "org.slf4j" % "slf4j-api" % "1.7.36" // no need to shade that one…
     ),
 
-    libraryDependencies += "com.lihaoyi" %% "utest" % "0.8.9" % Test,
+    libraryDependencies += "com.lihaoyi" %% "utest" % "0.9.1" % Test,
     testFrameworks += new TestFramework("utest.runner.Framework"),
 
     mimaBinaryIssueFilters ++= Seq(
@@ -261,7 +261,7 @@ lazy val interpolators = project
     Settings.mima(no213 = true),
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided,
-      "com.lihaoyi" %% "utest" % "0.8.9" % Test
+      "com.lihaoyi" %% "utest" % "0.9.1" % Test
     ),
     testFrameworks += new TestFramework("utest.runner.Framework"),
 
