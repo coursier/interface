@@ -69,7 +69,8 @@ lazy val interface = project
           rename("com.github.luben.zstd.**", "coursierapi.shaded.zstd.@1"),
           rename("io.airlift.compress.**", "coursierapi.shaded.compress.@1"),
           rename("io.github.alexarchambault.isterminal.**", "coursierapi.shaded.isterminal.@1"),
-          rename("org.apache.commons.lang3.**", "coursierapi.shaded.lang3.@1")
+          rename("org.apache.commons.lang3.**", "coursierapi.shaded.lang3.@1"),
+          rename("org.apache.tika.**", "coursierapi.shaded.tika.@1")
         )
 
         val processor = new com.eed3si9n.jarjar.JJProcessor(
@@ -174,6 +175,7 @@ lazy val interface = project
         case n if n.startsWith("coursier-core") => Some("!META-INF/**,!coursier.properties,!coursier/coursier.properties")
         case n if n.startsWith("scala-xml") => Some("!META-INF/**,!scala-xml.properties")
         case n if n.startsWith("scala-library") => Some("!META-INF/**,!library.properties,!rootdoc.txt")
+        case n if n.startsWith("tika-core") => Some("!META-INF/**,!pipes-fork-server-default-log4j2.xml")
         case _ => Some("!META-INF/**")
       }
     },
@@ -197,8 +199,8 @@ lazy val interface = project
     Settings.shared,
     Settings.mima(),
     libraryDependencies ++= Seq(
-      "io.get-coursier" %% "coursier" % "2.1.25-M1",
-      "io.get-coursier" %% "coursier-jvm" % "2.1.25-M1",
+      "io.get-coursier" %% "coursier" % "2.1.25-M18",
+      ("io.get-coursier" %% "coursier-jvm" % "2.1.25-M18").exclude("net.java.dev.jna", "jna"),
       "io.get-coursier.jniutils" % "windows-jni-utils-coursierapi" % "0.3.3",
       "org.slf4j" % "slf4j-api" % "1.7.36" // no need to shade that one…
     ),
