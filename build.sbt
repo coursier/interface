@@ -24,6 +24,7 @@ lazy val isJava9OrMore = sys.props.get("java.version").exists(!_.startsWith("1."
 lazy val interface = project
   .enablePlugins(SbtProguard)
   .settings(
+    scalacOptions += "-deprecation",
     moduleName := {
       val former = moduleName.value
       val sv = scalaVersion.value
