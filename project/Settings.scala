@@ -9,7 +9,7 @@ import java.util.Locale
 
 object Settings {
 
-  def scala213 = "2.13.16"
+  def scala213 = "2.13.17"
 
   def scala212 = "2.12.20"
 
