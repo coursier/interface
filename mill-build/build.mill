@@ -1,0 +1,11 @@
+import mill._
+import mill.meta.MillBuildRootModule
+import mill.scalalib._
+
+object `package` extends MillBuildRootModule {
+
+  override def mvnDeps = Seq(
+    mvn"com.github.lolgab::mill-mima::0.2.0",
+    mvn"com.eed3si9n.jarjarabrams::jarjar-abrams-core:1.16.0"
+  )
+}

@@ -24,10 +24,27 @@ jobs:
     - uses: coursier/setup-action@v1.3
       with:
         jvm: 21
-        apps: sbt
     - name: Test
-      run: ./.github/scripts/ci.sh
-      shell: bash
+      run: ./mill -i __.test
+
+  mima:
+    runs-on: ${{ matrix.OS }}
+    name: Test ${{ matrix.OS }}
+    strategy:
+      fail-fast: false
+      matrix:
+        OS: ["ubuntu-latest", "macos-13", "windows-latest"]
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v6
+    - uses: coursier/setup-action@v1.3
+      with:
+        jvm: 21
+    - name: Test
+      run: ./mill -i __.mimaReportBinaryIssues
 
   publish:
     if: github.event_name == 'push'
@@ -41,15 +58,10 @@ jobs:
     - uses: coursier/setup-action@v1.3
       with:
         jvm: 21
-        apps: sbt sbtn
-    - run: .github/scripts/gpg-setup.sh
-      shell: bash
-      env:
-        PGP_SECRET: ${{ secrets.PUBLISH_SECRET_KEY }}
     - name: Release
-      run: sbtn ci-release
+      run: ./mill -i mill.scalalib.SonatypeCentralPublishModule/
       env:
-        PGP_SECRET: ${{ secrets.PUBLISH_SECRET_KEY }}
-        PGP_PASSPHRASE: ${{ secrets.PUBLISH_SECRET_KEY_PASSWORD }}
-        SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
-        SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+        MILL_PGP_SECRET_BASE64: ${{ secrets.PUBLISH_SECRET_KEY }}
+        MILL_PGP_PASSPHRASE: ${{ secrets.PUBLISH_SECRET_KEY_PASSWORD }}
+        MILL_SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+        MILL_SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
