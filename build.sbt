@@ -119,7 +119,7 @@ lazy val interface = project
       dest
     },
     addArtifact(Compile / packageBin / artifact, finalPackageBin),
-    Proguard / proguardVersion := "7.8.0",
+    Proguard / proguardVersion := "7.8.1",
     Proguard / proguardOptions ++= {
       val baseOptions = Seq(
         "-dontnote",
