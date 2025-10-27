@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        OS: ["ubuntu-latest", "macos-13", "windows-latest"]
+        OS: ["ubuntu-latest", "macos-15", "windows-latest"]
     steps:
     - uses: actions/checkout@v5
       with:
@@ -33,7 +33,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        OS: ["ubuntu-latest", "macos-13", "windows-latest"]
+        OS: ["ubuntu-latest", "macos-15", "windows-latest"]
     steps:
     - uses: actions/checkout@v5
       with:
