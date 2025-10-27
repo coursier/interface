@@ -1,7 +1,9 @@
+package interfacebuild
+
 import java.io.File
 import java.util.zip.ZipFile
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters.*
 
 object Check {
 
@@ -12,7 +14,6 @@ object Check {
       .map(_.getName)
       .filter { n =>
         !n.startsWith("META-INF/") && !n.startsWith(ns + "/") &&
-          n != "reflect.properties" && // scala-reflect adds that
           n != "scala-collection-compat.properties" && // collection-compat adds that
           !n.contains("/libzstd-jni-") // com.github.luben:zstd-jni stuff (pulled via plexus-archiver)
       }

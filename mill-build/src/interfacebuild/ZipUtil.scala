@@ -1,3 +1,4 @@
+package interfacebuild
 
 import java.io.{ByteArrayOutputStream, File, FileInputStream, FileOutputStream, InputStream}
 import java.util.zip.{ZipEntry, ZipFile, ZipInputStream, ZipOutputStream}
@@ -37,12 +38,12 @@ object ZipUtil {
       }
     }
 
-  def removeFromZip(sourceZip: File, destZip: File, remove: String => Boolean): Unit = {
+  def removeFromZip(sourceZip: os.Path, destZip: os.Path, remove: String => Boolean): Unit = {
 
-    val is = new FileInputStream(sourceZip)
-    val os = new FileOutputStream(destZip)
+    val is = os.read.inputStream(sourceZip)
+    val os0 = os.write.outputStream(destZip)
     val bootstrapZip = new ZipInputStream(is)
-    val outputZip = new ZipOutputStream(os)
+    val outputZip = new ZipOutputStream(os0)
 
     for ((ent, data) <- zipEntries(bootstrapZip) if !remove(ent.getName)) {
 
@@ -59,16 +60,16 @@ object ZipUtil {
     outputZip.close()
 
     is.close()
-    os.close()
+    os0.close()
 
   }
 
-  def addOrOverwriteInZip(sourceZip: File, destZip: File, toAdd: Seq[(String, Array[Byte])]): Unit = {
+  def addOrOverwriteInZip(sourceZip: os.Path, destZip: os.Path, toAdd: Seq[(String, Array[Byte])]): Unit = {
 
-    val is = new FileInputStream(sourceZip)
-    val os = new FileOutputStream(destZip)
+    val is = os.read.inputStream(sourceZip)
+    val os0 = os.write.outputStream(destZip)
     val bootstrapZip = new ZipInputStream(is)
-    val outputZip = new ZipOutputStream(os)
+    val outputZip = new ZipOutputStream(os0)
 
     val strip = toAdd.map(_._1).toSet
 
@@ -94,12 +95,11 @@ object ZipUtil {
     outputZip.close()
 
     is.close()
-    os.close()
-
+    os0.close()
   }
 
-  def zipEntryContent(sourceZip: File, entryName: String): Option[Array[Byte]] = {
-    val zf = new ZipFile(sourceZip)
+  def zipEntryContent(sourceZip: os.Path, entryName: String): Option[Array[Byte]] = {
+    val zf = new ZipFile(sourceZip.toIO)
     val entryOpt = Option(zf.getEntry(entryName))
     val content = entryOpt.map { entry =>
       readFullySync(zf.getInputStream(entry))

@@ -1,0 +1,357 @@
+//| mill-version: 1.0.6
+
+import interfacebuild.*
+
+import com.github.lolgab.mill.mima.*
+import mill.*
+import mill.api.BuildCtx
+import mill.scalalib.*
+import mill.util.Jvm
+
+import java.util.Locale
+
+import scala.util.Properties
+
+object Versions {
+  def scala213 = "2.13.17"
+  def scala212 = "2.12.20"
+
+  def scala = Seq(scala212, scala213)
+
+  def junit = "4.13.2"
+  def utest = "0.9.1"
+}
+
+object Deps {
+  def coursier = mvn"io.get-coursier::coursier:2.1.25-M19"
+  def coursierJvm = mvn"io.get-coursier::coursier-jvm:2.1.25-M19".exclude(("net.java.dev.jna", "jna"))
+  def scalaReflect(sv: String) = mvn"org.scala-lang:scala-reflect:$sv"
+  def slf4j = mvn"org.slf4j:slf4j-api:1.7.36"
+  def windowsJniCoursierApi = mvn"io.get-coursier.jniutils:windows-jni-utils-coursierapi:0.3.3"
+
+  def proguard = mvn"com.guardsquare:proguard-base:7.8.1"
+}
+
+trait CoursierInterfaceModule extends ScalaModule {
+  def scalacOptions = super.scalacOptions() ++ Seq(
+    "-deprecation",
+    "--release", "8"
+  )
+  def javacOptions = Task {
+    super.javacOptions() ++ Seq(
+      "-source", "8",
+      "-target", "8",
+      "-bootclasspath", Util.rtJar.toString
+    )
+  }
+  def javadocOptions = Task {
+    super.javadocOptions() ++ Seq(
+      "-source", "8",
+      "-bootclasspath", Util.rtJar.toString
+    )
+  }
+}
+
+object CoursierInterfacePublishedModule {
+  def organization = "io.get-coursier"
+}
+
+trait CoursierInterfacePublishedModule extends CoursierInterfaceModule with PublishModule {
+  import mill.scalalib.publish._
+
+  def pomSettings = PomSettings(
+    description = artifactName(),
+    organization = CoursierInterfacePublishedModule.organization,
+    url = "https://github.com/coursier/interface",
+    licenses = Seq(License.`Apache-2.0`),
+    versionControl = VersionControl.github("coursier", "interface"),
+    developers = Seq(
+      Developer("alexarchambault", "Alex Archambault", "https://github.com/alexarchambault")
+    )
+  )
+
+  def publishVersion = CoursierInterfaceVersion.buildVersion
+}
+
+trait CoursierInterfaceBinCompatModule extends JavaModule with InterfaceMima {
+  def mimaPreviousVersions = {
+
+    def stable(ver: String): Boolean =
+      ver.exists(c => c != '0' && c != '.') &&
+      ver
+        .replace("-RC", "-")
+        .forall(c => c == '.' || c == '-' || c.isDigit)
+
+    os.proc(("git", "tag", "--merged", "HEAD^"))
+      .call(cwd = BuildCtx.workspaceRoot, stdin = os.Inherit)
+      .out.lines()
+      .iterator
+      .map(_.trim)
+      .filter(_.startsWith("v"))
+      .map(_.stripPrefix("v"))
+      .filter(stable)
+      // filtering out non cross versioned module in 0.0.1 (published cross-versioned there, added below)
+      // TODO Mill: Add 0.0.1
+      .filter(_ != "0.0.1")
+      // borked release, jline and jansi not shaded in it
+      .filter(_ != "0.0.11")
+      .toSeq
+  }
+}
+
+object interface extends Cross[Interface](Versions.scala)
+
+trait Interface extends CoursierInterfacePublishedModule with CrossSbtModule {
+  def artifactName = "interface-no-shading"
+  def mvnDeps = super.mvnDeps() ++ Seq(
+    Deps.coursier,
+    Deps.coursierJvm,
+    Deps.windowsJniCoursierApi,
+    Deps.slf4j // no need to shade that one…
+  )
+
+  object test extends CrossSbtTests with TestModule.Utest {
+    def utestVersion = Versions.utest
+  }
+}
+
+object proguarded extends CoursierInterfacePublishedModule {
+  def interfaceSv = Versions.scala213
+  def artifactId = "interface"
+  def scalaVersion = interface(interfaceSv).scalaVersion()
+  def mvnDeps = Seq(
+    Deps.slf4j
+  )
+
+  object mima extends CoursierInterfaceBinCompatModule {
+    def jar = Task {
+      val input = proguarded.jar().path
+      val dest = Task.dest / "interface.jar"
+      InterfaceMima.cleanUpJar(
+        proguarded.jar().path,
+        Task.dest / "interface.jar",
+        ignore = name => !name.startsWith("coursierapi/shaded/") || name.startsWith("coursierapi/internal/")
+      )
+      PathRef(dest)
+    }
+    def mimaPreviousArtifacts = Task {
+      mimaPreviousVersions().map(ver => mvn"${proguarded.pomSettings().organization}:${proguarded.artifactId()}:$ver")
+    }
+  }
+
+  def mimaBinaryIssueFilters = Seq(
+    ProblemFilter.exclude[Problem]("coursierapi.shaded.*"),
+    ProblemFilter.exclude[Problem]("coursierapi.internal.*")
+  )
+
+  def proguardedJar = Task {
+    val dest = Task.dest / "interface.jar"
+    val configFile = Task.dest / "config.pro"
+    val proguardOptions = {
+      val baseOptions = Seq(
+        "-dontnote",
+        "-dontwarn",
+        "-dontobfuscate",
+        "-dontoptimize",
+        "-keep class coursierapi.** {\n  public protected *;\n}"
+      )
+      val maybeJava9Options =
+        if (Util.isJava9OrMore) {
+          val javaHome = os.Path(sys.props.getOrElse("java.home", ???))
+          Seq(
+            s"-libraryjars ${javaHome / "jmods/java.base.jmod"}",
+            s"-libraryjars ${javaHome / "jmods/java.xml.jmod"}"
+          )
+        }
+        else
+          Nil
+      val classPathOptions = interface(interfaceSv)
+        .runClasspath()
+        .map(_.path)
+        .filter(os.exists)
+        .flatMap { path =>
+          val isLibrary = path.last.startsWith("slf4j-api-") && path.last.endsWith(".jar")
+          if (isLibrary)
+            Seq("-libraryjars", path.toString)
+          else {
+            val filterOpt = path.last match {
+              case n if n.startsWith("interface") => None // keep META-INF from main JAR
+              case n if n.startsWith("windows-jni-utils") => Some("!META-INF/MANIFEST.MF")
+              case n if n.startsWith("coursier-core") => Some("!META-INF/**,!coursier.properties,!coursier/coursier.properties")
+              case n if n.startsWith("scala-xml") => Some("!META-INF/**,!scala-xml.properties")
+              case n if n.startsWith("scala-library") => Some("!META-INF/**,!library.properties,!rootdoc.txt")
+              case n if n.startsWith("tika-core") => Some("!META-INF/**,!pipes-fork-server-default-log4j2.xml")
+              case _ => Some("!META-INF/**")
+            }
+            Seq("-injars", path.toString + filterOpt.fold("")("(" + _ + ")"))
+          }
+        }
+      val outputOptions = Seq("-outjars", dest.toString)
+      baseOptions ++ maybeJava9Options ++ classPathOptions ++ outputOptions
+    }
+    os.write(configFile, proguardOptions.map(_ + System.lineSeparator()).mkString)
+    val proguardCp = defaultResolver()
+      .classpath(Seq(Deps.proguard))
+      .map(_.path)
+    Jvm.callProcess(
+      mainClass = "proguard.ProGuard",
+      mainArgs = Seq("-include", configFile.toString),
+      classPath = proguardCp,
+      jvmArgs = Seq("-Xmx3172M"),
+      stdin = os.Inherit,
+      stdout = os.Inherit,
+      stderr = os.Inherit
+    )
+    PathRef(dest)
+  }
+  def proguardedAndShadedJar = Task {
+    import com.eed3si9n.jarjar._
+    import com.eed3si9n.jarjar.util.StandaloneJarProcessor
+    val input = proguardedJar().path
+    def rename(from: String, to: String): Rule = {
+      val rule = new Rule
+      rule.setPattern(from)
+      rule.setResult(to)
+      rule
+    }
+    val rules = Seq(
+      rename("scala.**", "coursierapi.shaded.scala.@1"),
+      rename("coursier.**", "coursierapi.shaded.coursier.@1"),
+      rename("dependency.**", "coursierapi.shaded.dependency.@1"),
+      rename("org.fusesource.**", "coursierapi.shaded.org.fusesource.@1"),
+      rename("io.github.alexarchambault.windowsansi.**", "coursierapi.shaded.windowsansi.@1"),
+      rename("concurrentrefhashmap.**", "coursierapi.shaded.concurrentrefhashmap.@1"),
+      rename("org.apache.commons.codec.**", "coursierapi.shaded.commonscodec.@1"),
+      rename("org.apache.commons.compress.**", "coursierapi.shaded.commonscompress.@1"),
+      rename("org.apache.commons.io.**", "coursierapi.shaded.commonsio.@1"),
+      rename("org.codehaus.plexus.**", "coursierapi.shaded.plexus.@1"),
+      rename("org.tukaani.xz.**", "coursierapi.shaded.xz.@1"),
+      rename("org.iq80.snappy.**", "coursierapi.shaded.snappy.@1"),
+      rename("com.github.plokhotnyuk.jsoniter_scala.core.**", "coursierapi.shaded.jsoniter.@1"),
+      rename("com.github.luben.zstd.**", "coursierapi.shaded.zstd.@1"),
+      rename("io.airlift.compress.**", "coursierapi.shaded.compress.@1"),
+      rename("io.github.alexarchambault.isterminal.**", "coursierapi.shaded.isterminal.@1"),
+      rename("org.apache.commons.lang3.**", "coursierapi.shaded.lang3.@1"),
+      rename("org.apache.tika.**", "coursierapi.shaded.tika.@1")
+    )
+    val processor = new com.eed3si9n.jarjar.JJProcessor(
+      rules,
+      verbose = false,
+      skipManifest = true,
+      misplacedClassStrategy = "fatal"
+    )
+    val dest = Task.dest / "interface.jar"
+    StandaloneJarProcessor.run(input.toIO, dest.toIO, processor)
+    PathRef(dest)
+  }
+  def cleanedUpJar = Task {
+    val input = proguardedAndShadedJar().path
+    val intermediaryDest = Task.dest / "intermediary.jar"
+    val dest = Task.dest / "interface.jar"
+    val toBeRemoved = Set(
+      "LICENSE",
+      "NOTICE",
+      "README"
+    )
+    val directoriesToBeRemoved = Seq(
+      "licenses/"
+    )
+    assert(directoriesToBeRemoved.forall(_.endsWith("/")))
+    ZipUtil.removeFromZip(
+      input,
+      intermediaryDest,
+      name =>
+        toBeRemoved(name) || directoriesToBeRemoved.exists(dir =>
+          name.startsWith(dir)
+        )
+    )
+    val serviceContent =
+      ZipUtil.zipEntryContent(proguardedJar().path, "META-INF/services/coursier.jniutils.NativeApi").getOrElse {
+        sys.error(s"META-INF/services/coursier.jniutils.NativeApi not found in ${proguardedJar().path}")
+      }
+    ZipUtil.addOrOverwriteInZip(
+      intermediaryDest,
+      dest,
+      Seq(
+        "META-INF/services/coursierapi.shaded.coursier.jniutils.NativeApi" -> serviceContent
+      )
+    )
+    PathRef(dest)
+  }
+  def jar = Task {
+    val jar0 = cleanedUpJar()
+    Check.onlyNamespace("coursierapi", jar0.path.toIO)
+    jar0
+  }
+  def docJar = interface(interfaceSv).docJar()
+  def sourceJar = interface(interfaceSv).sourceJar()
+}
+
+trait DependsOnProguarded extends JavaModule {
+  def mvnDeps = super.mvnDeps() ++ Seq(
+    mvn"${CoursierInterfacePublishedModule.organization}:interface:${proguarded.publishVersion()}"
+  )
+  def repositories = super.repositories() ++ Seq(
+    proguarded.publishLocalTestRepo().path.toNIO.toUri.toASCIIString
+  )
+}
+
+object interpolators extends Cross[Interpolators](Versions.scala)
+
+trait Interpolators extends CoursierInterfacePublishedModule with CoursierInterfaceBinCompatModule with CrossSbtModule with DependsOnProguarded {
+  def compileMvnDeps = super.compileMvnDeps() ++ Seq(
+    Deps.scalaReflect(scalaVersion())
+  )
+
+  def mimaPreviousVersions = Task {
+    val ignore =
+      if (scalaVersion().startsWith("2.13.")) (0 to 8).map("0.0." + _).toSet
+      else Set()
+    if (ignore.isEmpty)
+      super.mimaPreviousVersions()
+    else
+      super.mimaPreviousVersions().filter(!ignore(_))
+  }
+
+  def mimaBinaryIssueFilters = Seq(
+    ProblemFilter.exclude[MissingClassProblem]("coursierapi.Interpolators$Macros$"),
+  )
+
+  object test extends CrossSbtTests with TestModule.Utest {
+    def utestVersion = Versions.utest
+  }
+}
+
+object `interface-test` extends Cross[InterfaceTest](Versions.scala)
+
+trait InterfaceTest extends CoursierInterfaceModule with CrossSbtModule with DependsOnProguarded { interfaceTest =>
+  object test extends interfaceTest.SbtTests with TestModule.Junit4 {
+    def junit4Version = Versions.junit
+  }
+}
+
+object Util {
+  private def isArm64 =
+    Option(System.getProperty("os.arch")).map(_.toLowerCase(Locale.ROOT)) match {
+      case Some("aarch64" | "arm64") => true
+      case _                         => false
+    }
+  private lazy val java8Home = Option(System.getenv("COURSIER_INTERFACE_JAVA8_HOME")).getOrElse {
+    val jvmId =
+      if (Properties.isMac && isArm64)
+        // no native JDK 8 on Mac ARM, using amd64 one
+        "https://github.com/adoptium/temurin8-binaries/releases/download/jdk8u432-b06/OpenJDK8U-jdk_x64_mac_hotspot_8u432b06.tar.gz"
+      else
+        "adoptium:8"
+    os.proc("cs", "java-home", "--jvm", jvmId)
+      .call()
+      .out.trim()
+  }
+  lazy val rtJar = {
+    val path = os.Path(java8Home) / "jre/lib/rt.jar"
+    assert(os.isFile(path))
+    path
+  }
+
+  lazy val isJava9OrMore = sys.props.get("java.version").exists(!_.startsWith("1."))
+}
