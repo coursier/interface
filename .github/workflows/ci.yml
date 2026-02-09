@@ -20,7 +20,7 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v7
+    - uses: coursier/cache-action@v8
     - uses: coursier/setup-action@v2.0
       with:
         jvm: 21
@@ -39,7 +39,7 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v7
+    - uses: coursier/cache-action@v8
     - uses: coursier/setup-action@v2.0
       with:
         jvm: 21
@@ -54,7 +54,7 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v7
+    - uses: coursier/cache-action@v8
     - uses: coursier/setup-action@v2.0
       with:
         jvm: 21
