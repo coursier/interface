@@ -3,6 +3,10 @@ package coursierapi;
 import coursier.internal.api.ApiHelper;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
@@ -11,11 +15,13 @@ public final class Cache {
     private ExecutorService pool;
     private File location;
     private Logger logger;
+    private List<Credentials> credentials;
 
     private Cache() {
         pool = ApiHelper.defaultPool();
         location = ApiHelper.defaultLocation();
         logger = null;
+        credentials = Collections.emptyList();
     }
 
     public static Cache create() {
@@ -32,14 +38,15 @@ public final class Cache {
             Cache other = (Cache) obj;
             return this.pool.equals(other.pool) &&
                     this.location.equals(other.location) &&
-                    Objects.equals(this.logger, other.logger);
+                    Objects.equals(this.logger, other.logger) &&
+                    this.credentials.equals(other.credentials);
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return 37 * (37 * (17 + pool.hashCode()) + location.hashCode()) + Objects.hashCode(logger);
+        return 37 * (37 * (37 * (17 + pool.hashCode()) + location.hashCode()) + Objects.hashCode(logger)) + credentials.hashCode();
     }
 
     @Override
@@ -51,6 +58,10 @@ public final class Cache {
         if (logger != null) {
             b.append(", logger=");
             b.append(logger.toString());
+        }
+        if (!credentials.isEmpty()) {
+            b.append(", credentials=");
+            b.append(credentials.toString());
         }
         b.append(")");
         return b.toString();
@@ -71,6 +82,23 @@ public final class Cache {
         return this;
     }
 
+    public Cache withCredentials(List<Credentials> credentials) {
+        this.credentials = new ArrayList<>(credentials);
+        return this;
+    }
+
+    public Cache withCredentials(Credentials... credentials) {
+        this.credentials = new ArrayList<>(Arrays.asList(credentials));
+        return this;
+    }
+
+    public Cache addCredentials(Credentials... credentials) {
+        ArrayList<Credentials> newCredentials = new ArrayList<>(this.credentials);
+        newCredentials.addAll(Arrays.asList(credentials));
+        this.credentials = newCredentials;
+        return this;
+    }
+
     public ExecutorService getPool() {
         return pool;
     }
@@ -81,5 +109,9 @@ public final class Cache {
 
     public Logger getLogger() {
         return logger;
+    }
+
+    public List<Credentials> getCredentials() {
+        return Collections.unmodifiableList(credentials);
     }
 }

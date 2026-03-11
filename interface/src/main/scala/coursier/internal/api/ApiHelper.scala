@@ -72,7 +72,38 @@ object ApiHelper {
     if (credentials == null)
       None
     else
-      Some(Authentication(credentials.getUser, credentials.getPassword))
+      Some(Authentication(
+        credentials.getUser,
+        Option(credentials.getPassword),
+        realmOpt = Option(credentials.getRealm),
+        optional = credentials.isOptional,
+        httpsOnly = credentials.isHttpsOnly,
+        passOnRedirect = credentials.isPassOnRedirect
+      ))
+
+  def directCredentials(credentials: Credentials): coursier.credentials.DirectCredentials =
+    coursier.credentials.DirectCredentials(
+      credentials.getHost,
+      Some(credentials.getUser),
+      Some(coursier.credentials.Password(credentials.getPassword)),
+      Option(credentials.getRealm),
+      credentials.isOptional,
+      credentials.isMatchHost,
+      credentials.isHttpsOnly,
+      credentials.isPassOnRedirect
+    )
+
+  def credentials(dc: coursier.credentials.DirectCredentials): Credentials =
+    Credentials.of(
+      dc.host,
+      dc.usernameOpt.getOrElse(""),
+      dc.passwordOpt.map(_.value).getOrElse("")
+    )
+      .withRealm(dc.realm.orNull)
+      .withOptional(dc.optional)
+      .withMatchHost(dc.matchHost)
+      .withHttpsOnly(dc.httpsOnly)
+      .withPassOnRedirect(dc.passOnRedirect)
 
   private[this] def ivyRepository(ivy: coursierapi.IvyRepository): IvyRepository =
     IvyRepository.parse(
@@ -336,10 +367,15 @@ object ApiHelper {
         }
     }
 
+    val cacheCredentials = cache.getCredentials.asScala
+      .map(directCredentials)
+      .map(dc => dc: coursier.credentials.Credentials)
+
     FileCache()
       .withPool(cache.getPool)
       .withLocation(cache.getLocation)
       .withLogger(loggerOpt.getOrElse(CacheLogger.nop))
+      .withCredentials(cacheCredentials.toSeq)
   }
 
   def cache(cache: FileCache[Task]): coursierapi.Cache = {
@@ -349,10 +385,16 @@ object ApiHelper {
       case logger => Some(WrappedLogger.of(logger))
     }
 
+    val cacheCredentials = cache.credentials.flatMap {
+      case dc: coursier.credentials.DirectCredentials => Seq(credentials(dc))
+      case other => other.get().map(credentials)
+    }
+
     coursierapi.Cache.create()
       .withPool(cache.pool)
       .withLocation(cache.location)
       .withLogger(loggerOpt.orNull)
+      .withCredentials(cacheCredentials.asJava)
   }
 
   def fetch(fetch: coursierapi.Fetch): Fetch[Task] = {
