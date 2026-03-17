@@ -123,6 +123,11 @@ public final class Fetch {
         return this;
     }
 
+    public Fetch addFileCredentials(String path) {
+        this.cache = this.cache.addFileCredentials(path);
+        return this;
+    }
+
     public Fetch withMainArtifacts(Boolean mainArtifacts) {
         this.mainArtifacts = mainArtifacts;
         return this;

@@ -382,11 +382,14 @@ object ApiHelper {
       .map(directCredentials)
       .map(dc => dc: coursier.credentials.Credentials)
 
+    val fileCredentials = cache.getCredentialFiles.asScala
+      .map(path => coursier.credentials.FileCredentials(path, optional = true): coursier.credentials.Credentials)
+
     FileCache()
       .withPool(cache.getPool)
       .withLocation(cache.getLocation)
       .withLogger(loggerOpt.getOrElse(CacheLogger.nop))
-      .addCredentials(cacheCredentials.toSeq: _*)
+      .addCredentials((cacheCredentials ++ fileCredentials).toSeq: _*)
   }
 
   def cache(cache: FileCache[Task]): coursierapi.Cache = {
@@ -398,14 +401,20 @@ object ApiHelper {
 
     val cacheCredentials = cache.credentials.flatMap {
       case dc: coursier.credentials.DirectCredentials => Seq(credentials(dc))
+      case _: coursier.credentials.FileCredentials => Nil
       case other => other.get().map(credentials)
     }
 
-    coursierapi.Cache.create()
+    val fileCredentialPaths = cache.credentials.collect {
+      case fc: coursier.credentials.FileCredentials => fc.path
+    }
+
+    val c = coursierapi.Cache.create()
       .withPool(cache.pool)
       .withLocation(cache.location)
       .withLogger(loggerOpt.orNull)
       .withCredentials(cacheCredentials.asJava)
+    fileCredentialPaths.foldLeft(c)((c, path) => c.addFileCredentials(path))
   }
 
   def fetch(fetch: coursierapi.Fetch): Fetch[Task] = {

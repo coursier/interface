@@ -87,6 +87,11 @@ public final class Complete {
         return this;
     }
 
+    public Complete addFileCredentials(String path) {
+        this.cache = this.cache.addFileCredentials(path);
+        return this;
+    }
+
     public Complete withInput(String input) {
         this.input = input;
         return this;

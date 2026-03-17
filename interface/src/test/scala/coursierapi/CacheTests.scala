@@ -243,6 +243,61 @@ object CacheTests extends TestSuite {
         assert(thrown)
       }
 
+      test("fileCredentialsPassedToFileCache") {
+        val tmpFile = Files.createTempFile("test-file-creds", ".properties")
+        try {
+          val content =
+            """myrepo.host=filecred.example.com
+              |myrepo.username=fileuser
+              |myrepo.password=filepass
+              |""".stripMargin
+          Files.write(tmpFile, content.getBytes)
+
+          val cache = Cache.create()
+            .addFileCredentials(tmpFile.toAbsolutePath.toString)
+          val fc = ApiHelper.cache(cache)
+
+          // FileCredentials should be present in the FileCache credentials
+          val hasFileCred = fc.credentials.exists {
+            case fc: FileCredentials => fc.path == tmpFile.toAbsolutePath.toString
+            case _ => false
+          }
+          assert(hasFileCred)
+
+          // Resolve and verify the credentials load correctly
+          val resolved = fc.credentials.flatMap {
+            case dc: DirectCredentials => Seq(dc)
+            case other => other.get()
+          }
+          assert(resolved.exists(_.host == "filecred.example.com"))
+          assert(resolved.exists(dc => dc.usernameOpt.contains("fileuser")))
+        } finally {
+          Files.deleteIfExists(tmpFile)
+        }
+      }
+
+      test("fileCredentialsRoundTrip") {
+        val cache = Cache.create()
+          .addFileCredentials("/some/path/credentials.properties")
+          .addFileCredentials("/other/path/creds.properties")
+
+        // Java API -> Scala FileCache -> Java API
+        val fc = ApiHelper.cache(cache)
+        val cache2 = ApiHelper.cache(fc)
+
+        // Round-trip includes default FileCredentials from CacheDefaults plus our explicit ones
+        val files = cache2.getCredentialFiles
+        assert(files.contains("/some/path/credentials.properties"))
+        assert(files.contains("/other/path/creds.properties"))
+      }
+
+      test("fetchAddFileCredentials") {
+        val fetch = Fetch.create()
+          .addFileCredentials("/my/credentials.properties")
+        assert(fetch.getCache.getCredentialFiles.size == 1)
+        assert(fetch.getCache.getCredentialFiles.get(0) == "/my/credentials.properties")
+      }
+
       test("perRepoCredentialsWithAllFields") {
         val cred = Credentials.of("admin", "secret")
           .withRealm("CorpRealm")

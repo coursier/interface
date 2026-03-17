@@ -16,12 +16,14 @@ public final class Cache {
     private File location;
     private Logger logger;
     private List<Credentials> credentials;
+    private List<String> credentialFiles;
 
     private Cache() {
         pool = ApiHelper.defaultPool();
         location = ApiHelper.defaultLocation();
         logger = null;
         credentials = Collections.emptyList();
+        credentialFiles = Collections.emptyList();
     }
 
     public static Cache create() {
@@ -39,14 +41,15 @@ public final class Cache {
             return this.pool.equals(other.pool) &&
                     this.location.equals(other.location) &&
                     Objects.equals(this.logger, other.logger) &&
-                    this.credentials.equals(other.credentials);
+                    this.credentials.equals(other.credentials) &&
+                    this.credentialFiles.equals(other.credentialFiles);
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return 37 * (37 * (37 * (17 + pool.hashCode()) + location.hashCode()) + Objects.hashCode(logger)) + credentials.hashCode();
+        return 37 * (37 * (37 * (37 * (17 + pool.hashCode()) + location.hashCode()) + Objects.hashCode(logger)) + credentials.hashCode()) + credentialFiles.hashCode();
     }
 
     @Override
@@ -62,6 +65,10 @@ public final class Cache {
         if (!credentials.isEmpty()) {
             b.append(", credentials=");
             b.append(credentials.toString());
+        }
+        if (!credentialFiles.isEmpty()) {
+            b.append(", credentialFiles=");
+            b.append(credentialFiles.toString());
         }
         b.append(")");
         return b.toString();
@@ -99,6 +106,17 @@ public final class Cache {
         return this;
     }
 
+    public Cache addFileCredentials(String path) {
+        ArrayList<String> newFiles = new ArrayList<>(this.credentialFiles);
+        newFiles.add(path);
+        this.credentialFiles = newFiles;
+        return this;
+    }
+
+    public Cache addFileCredentials(File file) {
+        return addFileCredentials(file.getAbsolutePath());
+    }
+
     public ExecutorService getPool() {
         return pool;
     }
@@ -113,5 +131,9 @@ public final class Cache {
 
     public List<Credentials> getCredentials() {
         return Collections.unmodifiableList(credentials);
+    }
+
+    public List<String> getCredentialFiles() {
+        return Collections.unmodifiableList(credentialFiles);
     }
 }
