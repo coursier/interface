@@ -375,7 +375,7 @@ object ApiHelper {
       .withPool(cache.getPool)
       .withLocation(cache.getLocation)
       .withLogger(loggerOpt.getOrElse(CacheLogger.nop))
-      .withCredentials(cacheCredentials.toSeq)
+      .addCredentials(cacheCredentials.toSeq: _*)
   }
 
   def cache(cache: FileCache[Task]): coursierapi.Cache = {
