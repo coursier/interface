@@ -7,6 +7,7 @@ import coursier.util.EnvValues
 import utest._
 
 import java.nio.file.Files
+import java.util
 
 object CacheTests extends TestSuite {
 
@@ -117,7 +118,6 @@ object CacheTests extends TestSuite {
         assert(creds.get(0).getHost == "fetch.host.com")
         assert(creds.get(0).getUser == "fuser")
 
-        // Verify flows through to FileCache
         val fc = ApiHelper.cache(fetch.getCache)
         val allDirect = fc.credentials.flatMap {
           case dc: DirectCredentials => Seq(dc)
@@ -143,8 +143,6 @@ object CacheTests extends TestSuite {
       }
 
       test("allPathsPreserveDefaults") {
-        // Verify that Fetch, Complete, Versions all get default credentials
-        // when no explicit credentials are set
         val defaultFc = FileCache()
 
         val fetchFc = ApiHelper.cache(Fetch.create().getCache)
@@ -155,6 +153,115 @@ object CacheTests extends TestSuite {
 
         val versionsFc = ApiHelper.cache(Versions.create().getCache)
         assert(versionsFc.credentials == defaultFc.credentials)
+
+        val archiveFc = ApiHelper.cache(ArchiveCache.create().getCache)
+        assert(archiveFc.credentials == defaultFc.credentials)
+      }
+    }
+
+    test("credentialsApi") {
+
+      test("factoryMethods") {
+        val c1 = Credentials.of("user", "pass")
+        assert(c1.getHost == "")
+        assert(c1.getUser == "user")
+        assert(c1.getPassword == "pass")
+        assert(c1.getRealm == null)
+
+        val c2 = Credentials.of("myhost.com", "user", "pass")
+        assert(c2.getHost == "myhost.com")
+
+        val c3 = Credentials.of("myhost.com", "user", "pass", "MyRealm")
+        assert(c3.getRealm == "MyRealm")
+      }
+
+      test("builderMethods") {
+        val cred = Credentials.of("user", "pass")
+          .withHost("builder.host.com")
+          .withRealm("TestRealm")
+          .withOptional(false)
+          .withMatchHost(false)
+          .withHttpsOnly(true)
+          .withPassOnRedirect(true)
+
+        assert(cred.getHost == "builder.host.com")
+        assert(cred.getRealm == "TestRealm")
+        assert(!cred.isOptional)
+        assert(!cred.isMatchHost)
+        assert(cred.isHttpsOnly)
+        assert(cred.isPassOnRedirect)
+      }
+
+      test("equalsAndHashCode") {
+        val c1 = Credentials.of("host.com", "user", "pass", "realm")
+          .withHttpsOnly(true)
+        val c2 = Credentials.of("host.com", "user", "pass", "realm")
+          .withHttpsOnly(true)
+        val c3 = Credentials.of("other.com", "user", "pass", "realm")
+
+        assert(c1 == c2)
+        assert(c1.hashCode == c2.hashCode)
+        assert(c1 != c3)
+      }
+
+      test("cacheWithCredentialsList") {
+        val list = new util.ArrayList[Credentials]()
+        list.add(Credentials.of("h1.com", "u1", "p1"))
+        list.add(Credentials.of("h2.com", "u2", "p2"))
+
+        val cache = Cache.create().withCredentials(list)
+        assert(cache.getCredentials.size == 2)
+
+        // withCredentials(varargs) overload
+        val cache2 = Cache.create().withCredentials(
+          Credentials.of("h3.com", "u3", "p3"),
+          Credentials.of("h4.com", "u4", "p4")
+        )
+        assert(cache2.getCredentials.size == 2)
+        assert(cache2.getCredentials.get(0).getHost == "h3.com")
+        assert(cache2.getCredentials.get(1).getHost == "h4.com")
+      }
+
+      test("cacheAddCredentialsAccumulates") {
+        val cache = Cache.create()
+          .addCredentials(Credentials.of("h1.com", "u1", "p1"))
+          .addCredentials(Credentials.of("h2.com", "u2", "p2"))
+        assert(cache.getCredentials.size == 2)
+        assert(cache.getCredentials.get(0).getHost == "h1.com")
+        assert(cache.getCredentials.get(1).getHost == "h2.com")
+      }
+
+      test("credentialsImmutableFromGetter") {
+        val cache = Cache.create()
+          .addCredentials(Credentials.of("h1.com", "u1", "p1"))
+        val thrown = try {
+          cache.getCredentials.add(Credentials.of("h2.com", "u2", "p2"))
+          false
+        } catch {
+          case _: UnsupportedOperationException => true
+        }
+        assert(thrown)
+      }
+
+      test("perRepoCredentialsWithAllFields") {
+        val cred = Credentials.of("admin", "secret")
+          .withRealm("CorpRealm")
+          .withHttpsOnly(true)
+          .withPassOnRedirect(true)
+
+        val repo = MavenRepository.of("https://repo.corp.com/releases")
+          .withCredentials(cred)
+
+        val repo0 = ApiHelper.repository(ApiHelper.repository(repo))
+        assert(repo == repo0)
+
+        // Verify all credential fields survive the round-trip
+        val repoCred = repo0.asInstanceOf[MavenRepository].getCredentials
+        assert(repoCred.getUser == "admin")
+        assert(repoCred.getPassword == "secret")
+        assert(repoCred.getRealm == "CorpRealm")
+        assert(repoCred.isHttpsOnly)
+        assert(repoCred.isPassOnRedirect)
       }
     }
   }

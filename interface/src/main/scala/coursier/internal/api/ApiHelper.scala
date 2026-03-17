@@ -254,10 +254,21 @@ object ApiHelper {
     }
 
   def credentials(auth: Authentication): Credentials =
-    coursierapi.Credentials.of(auth.user, auth.passwordOpt.getOrElse(""))
+    coursierapi.Credentials.of(auth.userOpt.getOrElse(""), auth.passwordOpt.getOrElse(""))
+      .withRealm(auth.realmOpt.orNull)
+      .withOptional(auth.optional)
+      .withHttpsOnly(auth.httpsOnly)
+      .withPassOnRedirect(auth.passOnRedirect)
 
   def credentials(credentials: Credentials): Authentication =
-    Authentication(credentials.getUser, credentials.getPassword)
+    Authentication(
+      credentials.getUser,
+      Option(credentials.getPassword),
+      optional = credentials.isOptional,
+      realmOpt = Option(credentials.getRealm),
+      httpsOnly = credentials.isHttpsOnly,
+      passOnRedirect = credentials.isPassOnRedirect
+    )
 
   def repository(repo: Repository): coursierapi.Repository =
     repo match {
