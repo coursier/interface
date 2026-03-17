@@ -25,7 +25,7 @@ object CacheTests extends TestSuite {
               |""".stripMargin
           Files.write(tmpFile, content.getBytes)
 
-          val credEnv = EnvValues(Some(tmpFile.toAbsolutePath.toString), None)
+          val credEnv = EnvValues(Some(tmpFile.toAbsolutePath.toUri.toString), None)
           val noEnv = EnvValues(None, None)
           val defaultCreds = CacheEnv.defaultCredentials(credEnv, noEnv, noEnv)
 
@@ -78,7 +78,7 @@ object CacheTests extends TestSuite {
               |""".stripMargin
           Files.write(tmpFile, content.getBytes)
 
-          val credEnv = EnvValues(Some(tmpFile.toAbsolutePath.toString), None)
+          val credEnv = EnvValues(Some(tmpFile.toAbsolutePath.toUri.toString), None)
           val noEnv = EnvValues(None, None)
           val defaultCreds = CacheEnv.defaultCredentials(credEnv, noEnv, noEnv)
 
@@ -140,6 +140,68 @@ object CacheTests extends TestSuite {
         val creds = versions.getCache.getCredentials
         assert(creds.size == 1)
         assert(creds.get(0).getHost == "versions.host.com")
+      }
+
+      test("coursierCredentialsEnvInlineCredentials") {
+        // Simulates COURSIER_CREDENTIALS env var with inline credentials
+        val credEnv = EnvValues(Some("artifacts.corp.com user:password"), None)
+        val noEnv = EnvValues(None, None)
+        val creds = CacheEnv.defaultCredentials(credEnv, noEnv, noEnv)
+
+        val resolved = creds.flatMap {
+          case dc: DirectCredentials => Seq(dc)
+          case other => other.get()
+        }
+
+        assert(resolved.exists(_.host == "artifacts.corp.com"))
+        assert(resolved.exists(dc => dc.usernameOpt.contains("user")))
+        assert(resolved.exists(dc => dc.passwordOpt.exists(_.value == "password")))
+      }
+
+      test("coursierCredentialsEnvFileCredentials") {
+        // Simulates COURSIER_CREDENTIALS env var pointing to a properties file
+        val tmpFile = Files.createTempFile("test-env-credentials", ".properties")
+        try {
+          val content =
+            """myrepo.host=env-file.example.com
+              |myrepo.username=envuser
+              |myrepo.password=envpass
+              |""".stripMargin
+          Files.write(tmpFile, content.getBytes)
+
+          val credEnv = EnvValues(Some(tmpFile.toAbsolutePath.toUri.toString), None)
+          val noEnv = EnvValues(None, None)
+          val creds = CacheEnv.defaultCredentials(credEnv, noEnv, noEnv)
+
+          val resolved = creds.flatMap {
+            case dc: DirectCredentials => Seq(dc)
+            case other => other.get()
+          }
+
+          assert(resolved.exists(_.host == "env-file.example.com"))
+          assert(resolved.exists(dc => dc.usernameOpt.contains("envuser")))
+          assert(resolved.exists(dc => dc.passwordOpt.exists(_.value == "envpass")))
+        } finally {
+          Files.deleteIfExists(tmpFile)
+        }
+      }
+
+      test("coursierCredentialsEnvPreservedThroughApiHelper") {
+        // Proves that FileCache() defaults (which include COURSIER_CREDENTIALS)
+        // are preserved when going through ApiHelper.cache(Cache.create())
+        val cache = Cache.create()
+        val fc = ApiHelper.cache(cache)
+        val defaultFc = FileCache()
+
+        // The credentials from FileCache defaults (which reads COURSIER_CREDENTIALS)
+        // should be present in the FileCache created by ApiHelper
+        assert(fc.credentials == defaultFc.credentials)
+
+        // Adding explicit credentials should not displace the defaults
+        val cacheWithExtra = Cache.create()
+          .addCredentials(Credentials.of("extra.host.com", "eu", "ep"))
+        val fcWithExtra = ApiHelper.cache(cacheWithExtra)
+        assert(fcWithExtra.credentials.size == defaultFc.credentials.size + 1)
       }
 
       test("allPathsPreserveDefaults") {
