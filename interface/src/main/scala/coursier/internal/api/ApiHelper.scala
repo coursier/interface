@@ -72,7 +72,38 @@ object ApiHelper {
     if (credentials == null)
       None
     else
-      Some(Authentication(credentials.getUser, credentials.getPassword))
+      Some(Authentication(
+        credentials.getUser,
+        Option(credentials.getPassword),
+        realmOpt = Option(credentials.getRealm),
+        optional = credentials.isOptional,
+        httpsOnly = credentials.isHttpsOnly,
+        passOnRedirect = credentials.isPassOnRedirect
+      ))
+
+  def directCredentials(credentials: Credentials): coursier.credentials.DirectCredentials =
+    coursier.credentials.DirectCredentials(
+      credentials.getHost,
+      Some(credentials.getUser),
+      Some(coursier.credentials.Password(credentials.getPassword)),
+      Option(credentials.getRealm),
+      credentials.isOptional,
+      credentials.isMatchHost,
+      credentials.isHttpsOnly,
+      credentials.isPassOnRedirect
+    )
+
+  def credentials(dc: coursier.credentials.DirectCredentials): Credentials =
+    Credentials.of(
+      dc.host,
+      dc.usernameOpt.getOrElse(""),
+      dc.passwordOpt.map(_.value).getOrElse("")
+    )
+      .withRealm(dc.realm.orNull)
+      .withOptional(dc.optional)
+      .withMatchHost(dc.matchHost)
+      .withHttpsOnly(dc.httpsOnly)
+      .withPassOnRedirect(dc.passOnRedirect)
 
   private[this] def ivyRepository(ivy: coursierapi.IvyRepository): IvyRepository =
     IvyRepository.parse(
@@ -223,10 +254,21 @@ object ApiHelper {
     }
 
   def credentials(auth: Authentication): Credentials =
-    coursierapi.Credentials.of(auth.user, auth.passwordOpt.getOrElse(""))
+    coursierapi.Credentials.of(auth.userOpt.getOrElse(""), auth.passwordOpt.getOrElse(""))
+      .withRealm(auth.realmOpt.orNull)
+      .withOptional(auth.optional)
+      .withHttpsOnly(auth.httpsOnly)
+      .withPassOnRedirect(auth.passOnRedirect)
 
   def credentials(credentials: Credentials): Authentication =
-    Authentication(credentials.getUser, credentials.getPassword)
+    Authentication(
+      credentials.getUser,
+      Option(credentials.getPassword),
+      optional = credentials.isOptional,
+      realmOpt = Option(credentials.getRealm),
+      httpsOnly = credentials.isHttpsOnly,
+      passOnRedirect = credentials.isPassOnRedirect
+    )
 
   def repository(repo: Repository): coursierapi.Repository =
     repo match {
@@ -336,10 +378,18 @@ object ApiHelper {
         }
     }
 
+    val cacheCredentials = cache.getCredentials.asScala
+      .map(directCredentials)
+      .map(dc => dc: coursier.credentials.Credentials)
+
+    val fileCredentials = cache.getCredentialFiles.asScala
+      .map(path => coursier.credentials.FileCredentials(path, optional = true): coursier.credentials.Credentials)
+
     FileCache()
       .withPool(cache.getPool)
       .withLocation(cache.getLocation)
       .withLogger(loggerOpt.getOrElse(CacheLogger.nop))
+      .addCredentials((cacheCredentials ++ fileCredentials).toSeq: _*)
   }
 
   def cache(cache: FileCache[Task]): coursierapi.Cache = {
@@ -349,10 +399,22 @@ object ApiHelper {
       case logger => Some(WrappedLogger.of(logger))
     }
 
-    coursierapi.Cache.create()
+    val cacheCredentials = cache.credentials.flatMap {
+      case dc: coursier.credentials.DirectCredentials => Seq(credentials(dc))
+      case _: coursier.credentials.FileCredentials => Nil
+      case other => other.get().map(credentials)
+    }
+
+    val fileCredentialPaths = cache.credentials.collect {
+      case fc: coursier.credentials.FileCredentials => fc.path
+    }
+
+    val c = coursierapi.Cache.create()
       .withPool(cache.pool)
       .withLocation(cache.location)
       .withLogger(loggerOpt.orNull)
+      .withCredentials(cacheCredentials.asJava)
+    fileCredentialPaths.foldLeft(c)((c, path) => c.addFileCredentials(path))
   }
 
   def fetch(fetch: coursierapi.Fetch): Fetch[Task] = {

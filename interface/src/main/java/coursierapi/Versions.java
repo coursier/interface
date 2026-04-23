@@ -68,6 +68,16 @@ public final class Versions {
         return this;
     }
 
+    public Versions addCredentials(Credentials... credentials) {
+        this.cache = this.cache.addCredentials(credentials);
+        return this;
+    }
+
+    public Versions addFileCredentials(String path) {
+        this.cache = this.cache.addFileCredentials(path);
+        return this;
+    }
+
     public Versions withModule(Module module) {
         this.module = module;
         return this;
