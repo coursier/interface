@@ -122,6 +122,11 @@ object proguarded extends CoursierInterfacePublishedModule {
   def mvnDeps = Seq(
     Deps.slf4j
   )
+  override def publishXmlDeps = Task {
+    super.publishXmlDeps().filterNot { dep =>
+      dep.artifact.group == "org.scala-lang" && dep.artifact.id == "scala-library"
+    }
+  }
 
   object mima extends CoursierInterfaceBinCompatModule {
     def jar = Task {
