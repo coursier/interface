@@ -31,7 +31,7 @@ jobs:
 
   mima:
     runs-on: ${{ matrix.OS }}
-    name: Test ${{ matrix.OS }}
+    name: bin-compat ${{ matrix.OS }}
     strategy:
       fail-fast: false
       matrix:
