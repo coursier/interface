@@ -3,14 +3,20 @@
 import interfacebuild.*
 
 import com.github.lolgab.mill.mima.*
+import coursier.{Repositories, Resolve}
+import coursier.core.{Dependency, Module, ModuleName, Organization, Repository}
+import coursier.ivy.IvyRepository
+import coursier.maven.MavenRepository
+import coursier.version.VersionConstraint
 import mill.*
 import mill.api.BuildCtx
+import mill.javalib.publish.{LocalIvyPublisher, LocalM2Publisher}
 import mill.scalalib.*
 import mill.util.Jvm
 
 import java.util.Locale
 
-import scala.util.Properties
+import scala.util.{Properties, Using}
 
 object Versions {
   def scala213 = "2.13.17"
@@ -73,6 +79,84 @@ trait CoursierInterfacePublishedModule extends CoursierInterfaceModule with Publ
   def publishVersion = CoursierInterfaceVersion.buildVersion
 }
 
+def testPublishedDeps() = Task.Command {
+
+  def checkResolution(name: String, repositories: Seq[Repository]): Unit = {
+    val version = proguarded.publishVersion()
+
+    val allowed = Set(
+      s"${CoursierInterfacePublishedModule.organization}:interface:$version",
+      "org.slf4j:slf4j-api:1.7.36"
+    )
+
+    val interfaceDependency = Dependency(
+      Module(
+        Organization(CoursierInterfacePublishedModule.organization),
+        ModuleName("interface"),
+        Map.empty
+      ),
+      VersionConstraint(version)
+    )
+    def resolve(repositories: Seq[Repository]): Set[String] =
+      val resolve = Resolve()
+        .withRepositories(repositories)
+        .addDependencies(interfaceDependency)
+      val resolution = resolve.io.unsafeRun(true)(using resolve.cache.ec)
+      resolution.dependenciesWithRetainedVersions.map { dep =>
+        val mod = dep.module
+        s"${mod.organization.value}:${mod.name.value}:${dep.versionConstraint.asString}"
+      }
+
+    val modules = resolve(repositories)
+    val unexpected = modules -- allowed
+    if (unexpected.nonEmpty)
+      sys.error(
+        s"Unexpected dependencies from $name publication:${System.lineSeparator()}" +
+          unexpected.toSeq.sorted.mkString(System.lineSeparator())
+      )
+  }
+
+  val publishInfos = proguarded.defaultPublishInfos(sources = true, docs = false)()
+  val metadata = proguarded.artifactMetadata()
+  val pom = proguarded.pom().path
+
+  def checkIvy(baseDir: os.Path): Unit = {
+    val ivyRepo = baseDir / "ivy"
+    os.makeDir.all(ivyRepo)
+
+    val ivy = proguarded.ivy().path
+    new LocalIvyPublisher(ivyRepo).publishLocal(pom, Right(ivy), metadata, publishInfos)
+
+    val ivyBase = ivyRepo.toNIO.toUri.toASCIIString.stripSuffix("/")
+    val ivyRepository =
+      IvyRepository.parse(s"$ivyBase/[organisation]/[module]/[revision]/[type]s/[artifact](-[classifier]).[ext]")
+        .left.map(error => sys.error(s"Invalid Ivy repository pattern: $error"))
+        .merge
+    checkResolution(
+      "publishLocal",
+      Seq(ivyRepository, Repositories.central)
+    )
+  }
+
+  def checkM2(baseDir: os.Path): Unit = {
+    val m2Repo = baseDir / "m2"
+    os.makeDir.all(m2Repo)
+
+    new LocalM2Publisher(m2Repo).publish(pom, metadata, publishInfos)
+
+    val m2Base = m2Repo.toNIO.toUri.toASCIIString
+    checkResolution("publishM2Local", Seq(MavenRepository(m2Base), Repositories.central))
+  }
+
+  val tmp = os.temp.dir(prefix = "coursier-interface-published-deps-")
+  try {
+    checkIvy(tmp)
+    checkM2(tmp)
+  }
+  finally
+    os.remove.all(tmp)
+}
+
 trait CoursierInterfaceBinCompatModule extends JavaModule with InterfaceMima {
   def mimaPreviousVersions = {
 
@@ -126,6 +210,28 @@ object proguarded extends CoursierInterfacePublishedModule {
     super.publishXmlDeps().filterNot { dep =>
       dep.artifact.group == "org.scala-lang" && dep.artifact.id == "scala-library"
     }
+  }
+  override def ivy = Task {
+    import scala.xml.{Elem, XML}
+    val baseIvy = super.ivy()
+    val ivyXml = XML.loadFile(baseIvy.path.toIO)
+    val updated = ivyXml.copy(
+      child = ivyXml.child.map {
+        case dependencies: Elem if dependencies.label == "dependencies" =>
+          dependencies.copy(
+            child = dependencies.child.filter {
+              case dependency: Elem if dependency.label == "dependency" =>
+                dependency.attribute("org").forall(_.text != "org.scala-lang") ||
+                  dependency.attribute("name").forall(_.text != "scala-library")
+              case _ => true
+            }
+          )
+        case other => other
+      }
+    )
+    val dest = Task.dest / "ivy.xml"
+    XML.save(dest.toString, updated, "UTF-8", xmlDecl = true)
+    PathRef(dest)
   }
 
   object mima extends CoursierInterfaceBinCompatModule {

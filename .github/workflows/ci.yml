@@ -26,6 +26,8 @@ jobs:
         jvm: 21
     - name: Test
       run: ./mill -i __.test
+    - name: Test published dependencies
+      run: ./mill -i testPublishedDeps
 
   mima:
     runs-on: ${{ matrix.OS }}
