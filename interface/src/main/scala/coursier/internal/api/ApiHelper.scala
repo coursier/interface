@@ -68,6 +68,25 @@ object ApiHelper {
         dependency(dep)
     }
 
+  def parseRepository(s: String): coursierapi.Repository =
+    coursier.parse.RepositoryParser.repository(s) match {
+      case Left(err) =>
+        throw new IllegalArgumentException(err)
+      case Right(repo) =>
+        repository(repo)
+    }
+
+  def parseRepositories(inputs: ju.List[String]): ju.List[coursierapi.Repository] =
+    coursier.parse.RepositoryParser.repositories(inputs.asScala.toSeq).either match {
+      case Left(errs) =>
+        throw coursierapi.error.RepositoryParsingError.of(
+          coursierapi.error.SimpleRepositoryParsingError.of(errs.head),
+          errs.tail.map(coursierapi.error.SimpleRepositoryParsingError.of): _*
+        )
+      case Right(repos) =>
+        repos.map(repository).asJava
+    }
+
   private[this] def authenticationOpt(credentials: Credentials): Option[Authentication] =
     if (credentials == null)
       None
@@ -282,6 +301,7 @@ object ApiHelper {
         coursierapi.IvyRepository.of(ivy.pattern.string)
           .withMetadataPattern(mdPatternOpt.orNull)
           .withCredentials(credentialsOpt.orNull)
+          .withDropInfoAttributes(ivy.dropInfoAttributes)
       case other =>
         ApiRepo(other)
     }
