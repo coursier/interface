@@ -12,7 +12,7 @@ public final class RepositoryParser {
         return ApiHelper.parseRepository(input);
     }
 
-    public static List<Repository> repositories(List<String> inputs) {
+    public static List<Repository> repositories(List<String> inputs) throws RepositoryParsingError {
         return ApiHelper.parseRepositories(inputs);
     }
 }
