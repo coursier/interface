@@ -1,6 +1,7 @@
 package coursierapi;
 
 import coursier.internal.api.ApiHelper;
+import coursierapi.error.RepositoryParsingError;
 
 import java.util.List;
 
