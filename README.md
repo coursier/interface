@@ -1,5 +1,5 @@
 > [!WARNING]
-> **This repository is soon to be archived.**
+> **This repository is now archived.**
 >
 > Its sources now live in [coursier's main repository](https://github.com/coursier/coursier), mainly under the
 > [`modules/interface`](https://github.com/coursier/coursier/tree/main/modules/interface) directory. Its upcoming
